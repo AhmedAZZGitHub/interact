@@ -201,6 +201,14 @@ class AppController {
     const isSuperAdmin = window.authManager.isPlatformSuperAdmin();
     const isBrowsingClub = isSuperAdmin && !!this.activeSuperAdminBrowsingClub;
 
+    // Toggle body class for Super Admin single-page master layout
+    document.body.classList.toggle('is-superadmin', isSuperAdmin && !isBrowsingClub);
+
+    // If Super Admin and not browsing a club, ensure superadmin view is rendered
+    if (isSuperAdmin && !isBrowsingClub && this.currentTab !== 'superadmin') {
+      this.switchTab('superadmin');
+    }
+
     // Club-specific navigation items are strictly hidden for Super Admin unless actively browsing a club
     document.querySelectorAll('.club-nav-item').forEach(el => {
       el.style.display = (!isSuperAdmin || isBrowsingClub) ? '' : 'none';
@@ -216,7 +224,7 @@ class AppController {
     if (scanBtn) scanBtn.style.display = canProt ? 'flex' : 'none';
     if (manualSncBtn) manualSncBtn.style.display = canProt ? 'inline-flex' : 'none';
 
-    // Exclusive Super Admin Navigation Controls
+    // Super Admin Navigation Controls
     const sidebarSuperAdmin = document.getElementById('sidebar-item-superadmin');
     const bottomNavSuperAdmin = document.getElementById('bottom-nav-btn-superadmin');
     if (sidebarSuperAdmin) sidebarSuperAdmin.style.display = isSuperAdmin ? 'block' : 'none';
@@ -965,40 +973,75 @@ class AppController {
     });
 
     container.innerHTML = `
-      <!-- Super Admin Hero Banner -->
-      <div class="interact-card gold-border" style="margin-bottom:16px; background:linear-gradient(135deg, rgba(0,51,102,0.6), rgba(10,18,36,0.9));">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div style="width:48px; height:48px; border-radius:12px; background:#003366; border:2px solid var(--interact-gold); display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
+      <!-- Super Admin Master Header & Profile Card -->
+      <div class="interact-card gold-border" style="margin-bottom:16px; background:linear-gradient(135deg, rgba(0,51,102,0.7), rgba(10,18,36,0.95)); padding:20px 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="width:52px; height:52px; border-radius:14px; background:#003366; border:2px solid var(--interact-gold); display:flex; align-items:center; justify-content:center; font-size:1.8rem; box-shadow:0 0 15px rgba(247,168,27,0.3);">
               🛡️
             </div>
             <div>
-              <h2 style="color:#FFF; font-size:1.25rem; font-weight:800; margin:0;">Supervision Multi-Clubs Plateforme</h2>
-              <p style="color:var(--text-muted); font-size:0.78rem; margin:2px 0 0 0;">Super Admin Global : ahmedazzouzi72@gmail.com</p>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <h2 style="color:#FFF; font-size:1.3rem; font-weight:800; margin:0;">Supervision & Portail Super Admin</h2>
+                <span class="header-badge" style="background:rgba(247,168,27,0.15); color:var(--interact-gold); border-color:var(--interact-gold); font-size:0.7rem; font-weight:800;">
+                  👑 MASTER SUPER ADMIN
+                </span>
+              </div>
+              <p style="color:var(--text-muted); font-size:0.8rem; margin:3px 0 0 0;">
+                Connecté : <strong>Ahmed Azzouzi</strong> (ahmedazzouzi72@gmail.com) • Rotary District 9010
+              </p>
             </div>
           </div>
-          <button class="btn-primary" onclick="window.app.openRegistrationModal()" style="font-size:0.8rem; padding:8px 14px;">
-            ➕ Déclarer / Créer un Club
-          </button>
+
+          <!-- Super Admin Action Bar (Theme, Settings, New Club, Logout) -->
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button 
+              class="btn-secondary compact" 
+              style="font-size:0.78rem; padding:7px 12px;" 
+              onclick="window.themeManager.toggleTheme()" 
+              title="Changer de thème (Sombre / Clair)"
+            >
+              🌙 / ☀️ Thème
+            </button>
+            <button 
+              class="btn-primary" 
+              style="font-size:0.78rem; padding:7px 14px; background:linear-gradient(135deg, #003366, #001F3F); border:1px solid var(--accent-cyan); color:var(--accent-cyan);" 
+              onclick="window.app.openRegistrationModal()"
+            >
+              ➕ Créer un Club
+            </button>
+            <button 
+              class="btn-secondary compact" 
+              style="font-size:0.78rem; padding:7px 12px; color:#FF3B30; border-color:rgba(255,59,48,0.4);" 
+              onclick="window.authManager.logout()" 
+              title="Se Déconnecter"
+            >
+              🚪 Se Déconnecter
+            </button>
+          </div>
         </div>
 
         <!-- Global Platform KPIs -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:16px;">
-          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; text-align:center;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:20px;">
+          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:14px; border-radius:12px; text-align:center;">
             <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Total Clubs</span>
-            <div style="font-size:1.5rem; font-weight:800; color:var(--interact-gold);">${totalClubs}</div>
+            <div style="font-size:1.6rem; font-weight:800; color:var(--interact-gold); margin-top:2px;">${totalClubs}</div>
+            <span style="font-size:0.68rem; color:#64748B;">Plateforme Globale</span>
           </div>
-          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; text-align:center;">
+          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:14px; border-radius:12px; text-align:center;">
             <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Clubs Actifs</span>
-            <div style="font-size:1.5rem; font-weight:800; color:var(--success-green);">${activeClubs}</div>
+            <div style="font-size:1.6rem; font-weight:800; color:var(--success-green); margin-top:2px;">${activeClubs}</div>
+            <span style="font-size:0.68rem; color:#64748B;">En pleine activité</span>
           </div>
-          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; text-align:center;">
+          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:14px; border-radius:12px; text-align:center;">
             <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">En Attente</span>
-            <div style="font-size:1.5rem; font-weight:800; color:var(--warning-orange);">${pendingClubs}</div>
+            <div style="font-size:1.6rem; font-weight:800; color:var(--warning-orange); margin-top:2px;">${pendingClubs}</div>
+            <span style="font-size:0.68rem; color:#64748B;">Validation requise</span>
           </div>
-          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; text-align:center;">
+          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:14px; border-radius:12px; text-align:center;">
             <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Total Comptes</span>
-            <div style="font-size:1.5rem; font-weight:800; color:var(--neon-cyan);">${totalPlatformUsers}</div>
+            <div style="font-size:1.6rem; font-weight:800; color:var(--neon-cyan); margin-top:2px;">${totalPlatformUsers}</div>
+            <span style="font-size:0.68rem; color:#64748B;">Membres inscrits</span>
           </div>
         </div>
       </div>

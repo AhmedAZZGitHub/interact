@@ -1997,3 +1997,22 @@ body.light-theme .channels-sidebar-pane {
   box-shadow: 0 0 14px rgba(247, 168, 27, 0.3);
 }
 
+/* ==========================================================================
+   EXCLUSIVE SINGLE-PAGE SUPER ADMIN PORTAL LAYOUT
+   ========================================================================== */
+body.is-superadmin .desktop-sidebar,
+body.is-superadmin .bottom-nav-bar {
+  display: none !important;
+}
+
+body.is-superadmin .main-viewport {
+  max-width: 1200px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 24px 20px !important;
+}
+
+body.is-superadmin .header-club-select {
+  display: none !important;
+}
+
