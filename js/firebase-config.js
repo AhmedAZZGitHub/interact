@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * FIREBASE & UNIFIED DATA STORE CONFIGURATION
+ * FIREBASE & UNIFIED DATA STORE CONFIGURATION (EXTENDED COLLABORATIVE SCHEMA)
  * Firebase Web API Key: AIzaSyB_sLq0RLPplqNR9kQXx3wWyzQGgx_zdso
  * Realtime Database + Local Fallback Sync Engine (DBStore)
  * ==========================================================================
@@ -36,7 +36,7 @@ try {
 }
 
 /**
- * DEFAULT DEMO DATA SEED
+ * EXTENDED DEFAULT SEED DATA
  */
 const DEFAULT_SEED_DATA = {
   activeClubId: "club_carthage_01",
@@ -180,7 +180,7 @@ const DEFAULT_SEED_DATA = {
                   id: "tsk_01",
                   title: "Négociation avec le fournisseur de couvertures (devis)",
                   assignedTo: ["user_chef_action"],
-                  deadline: "2026-08-24T18:00:00Z", // Past -> Triggers auto-sanction
+                  deadline: "2026-08-24T18:00:00Z",
                   status: "pending",
                   completedAt: null,
                   priority: "urgent"
@@ -189,7 +189,7 @@ const DEFAULT_SEED_DATA = {
                   id: "tsk_02",
                   title: "Collecte des denrées alimentaires au supermarché partenaire",
                   assignedTo: ["user_membre_01", "user_recrue_01"],
-                  deadline: new Date(Date.now() + 18 * 3600 * 1000).toISOString(), // < 24h
+                  deadline: new Date(Date.now() + 18 * 3600 * 1000).toISOString(),
                   status: "pending",
                   completedAt: null,
                   priority: "warning"
@@ -198,7 +198,7 @@ const DEFAULT_SEED_DATA = {
                   id: "tsk_03",
                   title: "Organisation du planning de tri et d'emballage",
                   assignedTo: ["user_cochef_action"],
-                  deadline: new Date(Date.now() + 72 * 3600 * 1000).toISOString(), // Normal
+                  deadline: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
                   status: "pending",
                   completedAt: null,
                   priority: "normal"
@@ -245,15 +245,6 @@ const DEFAULT_SEED_DATA = {
                   status: "pending",
                   completedAt: null,
                   priority: "warning"
-                },
-                "tsk_com_02": {
-                  id: "tsk_com_02",
-                  title: "Conception des badges officiels pour les recrues",
-                  assignedTo: ["user_chef_com"],
-                  deadline: new Date(Date.now() + 120 * 3600 * 1000).toISOString(),
-                  status: "pending",
-                  completedAt: null,
-                  priority: "normal"
                 }
               }
             }
@@ -318,15 +309,159 @@ const DEFAULT_SEED_DATA = {
           authorName: "Youssef Mahjoub (Président)",
           createdAt: "2026-08-24T18:00:00Z",
           category: "statutaire"
+        }
+      },
+      channels: {
+        "chan_general": {
+          id: "chan_general",
+          clubId: "club_carthage_01",
+          commissionId: null,
+          taskId: null,
+          name: "📢 Annonces Officielles (Bureau)",
+          type: "announcements",
+          allowedWriters: ["president", "vice_president", "secretaire", "protocole"],
+          meetUrl: "https://meet.jit.si/Interact_Carthage_General_Live",
+          createdAt: "2026-08-20T10:00:00Z"
         },
-        "ann_02": {
-          id: "ann_02",
-          title: "🔥 Urgence Logistique : Tri des vêtements chaud",
-          content: "Nous recherchons 4 volontaires supplémentaires pour le centre de tri ce vendredi après-midi à 16h30. Merci de vous signaler auprès de la commission Action Sociale.",
-          authorUid: "user_chef_action",
-          authorName: "Mehdi Ben Amor (Chef Commission)",
-          createdAt: "2026-08-24T21:15:00Z",
-          category: "urgent"
+        "chan_sociale": {
+          id: "chan_sociale",
+          clubId: "club_carthage_01",
+          commissionId: "comm_sociale",
+          taskId: null,
+          name: "🤝 Commission Action Sociale",
+          type: "commission",
+          allowedWriters: ["all"],
+          meetUrl: "https://meet.jit.si/Interact_Carthage_Sociale_Live",
+          createdAt: "2026-08-20T10:00:00Z"
+        },
+        "chan_sub_sponsoring": {
+          id: "chan_sub_sponsoring",
+          clubId: "club_carthage_01",
+          commissionId: "comm_sociale",
+          taskId: "tsk_01",
+          name: "🎯 Équipe Sponsoring Couvertures J-5",
+          type: "task_custom",
+          allowedWriters: ["all"],
+          meetUrl: "https://meet.jit.si/Interact_Carthage_Sponsoring_Task",
+          createdAt: "2026-08-22T14:00:00Z"
+        }
+      },
+      messages: {
+        "chan_general": {
+          "msg_01": {
+            id: "msg_01",
+            channelId: "chan_general",
+            senderId: "user_pres",
+            senderName: "Youssef Mahjoub",
+            senderRole: "president",
+            text: "Bienvenue à tous sur la nouvelle plateforme mobile et collaborative Interact Carthage ! Retrouvez ici toutes les annonces officielles du Bureau.",
+            attachments: [],
+            reactions: {
+              "👍": ["user_vp", "user_sec", "user_membre_01"],
+              "🔥": ["user_chef_action", "user_recrue_01"],
+              "❤️": ["user_proto"]
+            },
+            createdAt: "2026-08-24T18:30:00Z"
+          },
+          "msg_02": {
+            id: "msg_02",
+            channelId: "chan_general",
+            senderId: "user_sec",
+            senderName: "Nour Khemir",
+            senderRole: "secretaire",
+            text: "Rappel : La feuille de présence pour la réunion de dimanche est disponible dans le calendrier. N'oubliez pas de confirmer votre présence.",
+            attachments: [],
+            reactions: {
+              "👀": ["user_membre_01", "user_cochef_action"],
+              "🎉": ["user_vp"]
+            },
+            createdAt: "2026-08-24T20:15:00Z"
+          }
+        },
+        "chan_sociale": {
+          "msg_soc_01": {
+            id: "msg_soc_01",
+            channelId: "chan_sociale",
+            senderId: "user_chef_action",
+            senderName: "Mehdi Ben Amor",
+            senderRole: "chef_commission",
+            text: "L'équipe sociale, nous organisons un Meet rapide ce soir à 21h pour finaliser la liste des bénéficiaires de l'action Hiver Chaud !",
+            attachments: [],
+            reactions: {
+              "👍": ["user_cochef_action", "user_membre_01"]
+            },
+            createdAt: "2026-08-25T00:10:00Z"
+          }
+        },
+        "chan_sub_sponsoring": {
+          "msg_sp_01": {
+            id: "msg_sp_01",
+            channelId: "chan_sub_sponsoring",
+            senderId: "user_cochef_action",
+            senderName: "Ines Ghorbel",
+            senderRole: "co_chef",
+            text: "J'ai déposé le devis du fabricant de couvertures dans l'espace de rendu de la tâche. Merci de valider !",
+            attachments: ["https://drive.google.com/file/d/sample-devis-couvertures/view"],
+            reactions: {
+              "🔥": ["user_chef_action"]
+            },
+            createdAt: "2026-08-25T01:15:00Z"
+          }
+        }
+      },
+      task_submissions: {
+        "tsk_01": {
+          "sub_01": {
+            id: "sub_01",
+            taskId: "tsk_01",
+            clubId: "club_carthage_01",
+            submittedBy: ["user_cochef_action"],
+            submitterName: "Ines Ghorbel",
+            textNotes: "Devis négocié à 18 DT TTC par couverture polaire haute densité (100 unités). Remise accordée de 15% pour le club Interact.",
+            fileUrls: ["https://drive.google.com/file/d/devis-couvertures-interact.pdf"],
+            submittedAt: "2026-08-24T17:45:00Z",
+            validated: false,
+            validatedBy: null,
+            validationFeedback: null
+          }
+        }
+      },
+      events_schedule: {
+        "ev_01": {
+          id: "ev_01",
+          clubId: "club_carthage_01",
+          actionId: null,
+          title: "Réunion Statutaire de Rentrée",
+          description: "Ordre du jour : Bilan financier, validation des budgets des commissions et points Protocole.",
+          startDateTime: "2026-08-30T10:00:00Z",
+          endDateTime: "2026-08-30T12:30:00Z",
+          location: "Siège Rotary Club Carthage",
+          type: "statutaire",
+          isPublicToClub: true
+        },
+        "ev_02": {
+          id: "ev_02",
+          clubId: "club_carthage_01",
+          actionId: "act_hiver_chaud",
+          title: "Distribution sur le Terrain — Hiver Chaud",
+          description: "Départ de la caravane solidaire vers la région de Siliana.",
+          startDateTime: "2026-09-05T07:00:00Z",
+          endDateTime: "2026-09-05T18:00:00Z",
+          location: "Siliana (Centre Nord)",
+          type: "action",
+          isPublicToClub: true
+        },
+        "ev_03": {
+          id: "ev_03",
+          clubId: "club_carthage_01",
+          actionId: null,
+          title: "Atelier RYLA & Leadership Jeunesse",
+          description: "Formation animée par les membres du Rotary sur la prise de parole et la gestion de projet.",
+          startDateTime: "2026-09-12T14:00:00Z",
+          endDateTime: "2026-09-12T17:30:00Z",
+          location: "Hôtel Carthage Thalasso / Meet",
+          type: "formation",
+          isPublicToClub: true
         }
       }
     }
@@ -334,11 +469,11 @@ const DEFAULT_SEED_DATA = {
 };
 
 /**
- * DBStore - Unified Reactive Database Bridge
+ * DBStore - Reactive Unified Database Bridge
  */
 class DBStore {
   constructor() {
-    this.storageKey = 'interact_platform_data_v1';
+    this.storageKey = 'interact_platform_data_v2';
     this.listeners = [];
     this.data = this.loadInitialData();
   }
@@ -372,31 +507,196 @@ class DBStore {
   }
 
   getMembers(clubId = null) {
-    const club = this.getClub(clubId);
-    return club.members || {};
+    return this.getClub(clubId).members || {};
   }
 
   getMember(userId, clubId = null) {
-    const members = this.getMembers(clubId);
-    return members[userId] || null;
+    return this.getMembers(clubId)[userId] || null;
   }
 
   getCommissions(clubId = null) {
-    const club = this.getClub(clubId);
-    return club.commissions || {};
+    return this.getClub(clubId).commissions || {};
   }
 
   getSanctions(clubId = null) {
-    const club = this.getClub(clubId);
-    return club.sanctions || {};
+    return this.getClub(clubId).sanctions || {};
   }
 
   getAnnouncements(clubId = null) {
-    const club = this.getClub(clubId);
-    return club.announcements || {};
+    return this.getClub(clubId).announcements || {};
   }
 
-  // Update operations
+  /* ================= CHANNELS & MESSAGING ================= */
+  getChannels(clubId = null) {
+    return this.getClub(clubId).channels || {};
+  }
+
+  getChannel(channelId, clubId = null) {
+    return this.getChannels(clubId)[channelId] || null;
+  }
+
+  getMessages(channelId, clubId = null) {
+    const club = this.getClub(clubId);
+    if (!club.messages) club.messages = {};
+    return club.messages[channelId] || {};
+  }
+
+  addMessage(channelId, messageData, clubId = null) {
+    const club = this.getClub(clubId);
+    if (!club.messages) club.messages = {};
+    if (!club.messages[channelId]) club.messages[channelId] = {};
+
+    const msgId = 'msg_' + Date.now();
+    const newMsg = {
+      id: msgId,
+      channelId,
+      senderId: messageData.senderId,
+      senderName: messageData.senderName,
+      senderRole: messageData.senderRole,
+      text: messageData.text,
+      attachments: messageData.attachments || [],
+      reactions: {},
+      createdAt: new Date().toISOString()
+    };
+
+    club.messages[channelId][msgId] = newMsg;
+    this.saveData(this.data);
+    return newMsg;
+  }
+
+  toggleReaction(channelId, messageId, emoji, userId, clubId = null) {
+    const club = this.getClub(clubId);
+    const msg = club.messages?.[channelId]?.[messageId];
+    if (!msg) return null;
+
+    if (!msg.reactions) msg.reactions = {};
+    if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+
+    const index = msg.reactions[emoji].indexOf(userId);
+    if (index > -1) {
+      msg.reactions[emoji].splice(index, 1);
+      if (msg.reactions[emoji].length === 0) {
+        delete msg.reactions[emoji];
+      }
+    } else {
+      msg.reactions[emoji].push(userId);
+    }
+
+    this.saveData(this.data);
+    return msg;
+  }
+
+  addChannel(channelData, clubId = null) {
+    const club = this.getClub(clubId);
+    if (!club.channels) club.channels = {};
+
+    const channelId = 'chan_sub_' + Date.now();
+    const cleanRoomName = channelData.name.replace(/[^a-zA-Z0-9]/g, '_');
+    const newChannel = {
+      id: channelId,
+      clubId: club.info.id,
+      commissionId: channelData.commissionId || null,
+      taskId: channelData.taskId || null,
+      name: channelData.name,
+      type: channelData.type || 'task_custom',
+      allowedWriters: channelData.allowedWriters || ['all'],
+      meetUrl: `https://meet.jit.si/Interact_Carthage_${cleanRoomName}`,
+      createdAt: new Date().toISOString()
+    };
+
+    club.channels[channelId] = newChannel;
+    this.saveData(this.data);
+    return newChannel;
+  }
+
+  /* ================= TASK WORKSPACE & DELIVERABLES ================= */
+  getTaskSubmissions(taskId, clubId = null) {
+    const club = this.getClub(clubId);
+    if (!club.task_submissions) club.task_submissions = {};
+    return club.task_submissions[taskId] || {};
+  }
+
+  addTaskSubmission(taskId, submissionData, clubId = null) {
+    const club = this.getClub(clubId);
+    if (!club.task_submissions) club.task_submissions = {};
+    if (!club.task_submissions[taskId]) club.task_submissions[taskId] = {};
+
+    const subId = 'sub_' + Date.now();
+    const newSub = {
+      id: subId,
+      taskId,
+      clubId: club.info.id,
+      submittedBy: submissionData.submittedBy || [],
+      submitterName: submissionData.submitterName,
+      textNotes: submissionData.textNotes,
+      fileUrls: submissionData.fileUrls || [],
+      submittedAt: new Date().toISOString(),
+      validated: false,
+      validatedBy: null,
+      validationFeedback: null
+    };
+
+    club.task_submissions[taskId][subId] = newSub;
+    this.saveData(this.data);
+    return newSub;
+  }
+
+  validateTaskSubmission(taskId, submissionId, isValid, feedback, validatorName, clubId = null) {
+    const club = this.getClub(clubId);
+    const sub = club.task_submissions?.[taskId]?.[submissionId];
+    if (sub) {
+      sub.validated = isValid;
+      sub.validatedBy = validatorName;
+      sub.validationFeedback = feedback || null;
+
+      // If validated, also complete the task in the commission tree
+      if (isValid) {
+        Object.values(club.commissions || {}).forEach(comm => {
+          Object.values(comm.actions || {}).forEach(act => {
+            if (act.tasks && act.tasks[taskId]) {
+              act.tasks[taskId].status = 'completed';
+              act.tasks[taskId].completedAt = new Date().toISOString();
+            }
+          });
+        });
+      }
+
+      this.saveData(this.data);
+      return sub;
+    }
+    return null;
+  }
+
+  /* ================= SHARED CALENDAR & EVENTS ================= */
+  getEvents(clubId = null) {
+    const club = this.getClub(clubId);
+    return club.events_schedule || {};
+  }
+
+  addEvent(eventData, clubId = null) {
+    const club = this.getClub(clubId);
+    if (!club.events_schedule) club.events_schedule = {};
+
+    const evId = 'ev_' + Date.now();
+    const newEvent = {
+      id: evId,
+      clubId: club.info.id,
+      actionId: eventData.actionId || null,
+      title: eventData.title,
+      description: eventData.description || '',
+      startDateTime: eventData.startDateTime,
+      endDateTime: eventData.endDateTime || eventData.startDateTime,
+      location: eventData.location || '',
+      type: eventData.type || 'statutaire',
+      isPublicToClub: true
+    };
+
+    club.events_schedule[evId] = newEvent;
+    this.saveData(this.data);
+    return newEvent;
+  }
+
+  /* ================= EXISTING CORE UPDATES ================= */
   updateMemberRole(userId, newRole, newCommissionId = null, clubId = null) {
     const club = this.getClub(clubId);
     if (club.members[userId]) {
@@ -508,7 +808,6 @@ class DBStore {
     if (!club.sanctions) club.sanctions = {};
     club.sanctions[sanctionId] = newSanction;
 
-    // Increment member strikes count
     if (club.members[sanctionData.userId]) {
       club.members[sanctionData.userId].strikesCount = (club.members[sanctionData.userId].strikesCount || 0) + 1;
     }
@@ -522,7 +821,6 @@ class DBStore {
     if (club.sanctions && club.sanctions[sanctionId]) {
       Object.assign(club.sanctions[sanctionId], updates);
       
-      // If excused, decrement strikesCount
       if (updates.status === 'excused') {
         const userId = club.sanctions[sanctionId].userId;
         if (club.members[userId] && club.members[userId].strikesCount > 0) {

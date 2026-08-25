@@ -28,14 +28,16 @@ class AppController {
     if (window.tasksManager) window.tasksManager.init();
     if (window.protocolManager) window.protocolManager.init();
     if (window.aiAssistant) window.aiAssistant.init();
+    if (window.channelsManager) window.channelsManager.init();
+    if (window.calendarManager) window.calendarManager.init();
 
     // Render Home & Settings
     this.renderHome();
     this.renderSettings();
     this.updateHeaderUI();
 
-    // Attach Bottom Navigation Event Listeners
-    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    // Attach Navigation Event Listeners (Both Mobile Bottom Bar & Desktop Sidebar)
+    document.querySelectorAll('.nav-tab-btn, .sidebar-nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
         if (tab) this.switchTab(tab);
@@ -68,8 +70,8 @@ class AppController {
   switchTab(tabName) {
     this.currentTab = tabName;
 
-    // Update bottom nav bar buttons
-    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    // Update bottom nav bar & sidebar buttons
+    document.querySelectorAll('.nav-tab-btn, .sidebar-nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabName);
     });
 
@@ -84,6 +86,8 @@ class AppController {
     if (tabName === 'tasks' && window.tasksManager) window.tasksManager.render();
     if (tabName === 'commissions' && window.commissionsManager) window.commissionsManager.render();
     if (tabName === 'protocol' && window.protocolManager) window.protocolManager.render();
+    if (tabName === 'channels' && window.channelsManager) window.channelsManager.render();
+    if (tabName === 'calendar' && window.calendarManager) window.calendarManager.render();
   }
 
   updateHeaderUI() {

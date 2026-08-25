@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Interact" />
-  <meta name="description" content="Plateforme mobile PWA officielle de gestion pour les clubs Interact (Rotary International)" />
-  <title>Interact Club Platform | Mobile PWA</title>
+  <meta name="description" content="Plateforme mobile & desktop collaborative officielle pour les clubs Interact (Rotary International)" />
+  <title>Interact Club Platform | Collaborative PWA</title>
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="./manifest.json" />
@@ -23,7 +23,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="./css/styles.css" />
 
-  <!-- Firebase Web SDK (Compat version for zero-build PWA) -->
+  <!-- Firebase Web SDK (Compat version) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -52,9 +52,22 @@
     </div>
 
     <div class="header-actions">
+      <!-- Dark / Light Theme Toggle Button -->
+      <button 
+        id="header-theme-toggle-btn" 
+        class="theme-toggle-btn" 
+        onclick="window.themeManager.toggleTheme()" 
+        title="Changer de thème"
+      >
+        🌙
+      </button>
+
+      <!-- Role Badge -->
       <div class="role-pill" id="header-role-pill" onclick="window.app.switchTab('settings')" title="Cliquez pour simuler un autre rôle">
         <span>👑 Président</span>
       </div>
+
+      <!-- Avatar Button -->
       <div class="user-avatar-btn" id="header-avatar-btn" onclick="window.app.switchTab('settings')">
         Y
       </div>
@@ -62,274 +75,357 @@
   </header>
 
   <!-- ==========================================================================
-       MAIN VIEWPORT CONTAINER (SPA TABS)
+       APP LAYOUT CONTAINER (DESKTOP SIDEBAR + MAIN VIEWPORT)
        ========================================================================== -->
-  <main class="main-viewport">
+  <div class="app-layout-container">
 
-    <!-- ================= TAB 1: ACCUEIL ================= -->
-    <section id="view-home" class="view-section active">
-      <!-- Club Hero Banner -->
-      <div class="glass-card club-hero-card gold-border">
-        <div class="hero-meta">
-          <span class="hero-badge-rotary">⚙️ ROTARY CLUB SPONSOR</span>
-          <span class="header-badge" style="background:rgba(0,240,255,0.15); color:var(--neon-cyan); border-color:var(--border-cyan);">
-            2025-2026
-          </span>
+    <!-- DESKTOP SIDEBAR NAVIGATION (>= 992px) -->
+    <aside class="desktop-sidebar">
+      <div class="sidebar-brand-box">
+        <div style="font-size:0.72rem; font-weight:700; color:var(--interact-gold); text-transform:uppercase; letter-spacing:0.5px;">
+          ⚙️ Rotary District 9010
         </div>
-        <h2 class="club-title">Interact Club Carthage</h2>
-        <p class="club-subtitle">« Servir d'abord » • District 9010 • Lead, Connect, Inspire</p>
-
-        <div class="hero-stats-grid">
-          <div class="stat-box">
-            <div class="stat-number cyan" id="stat-total-members">10</div>
-            <div class="stat-label">Membres</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-number gold" id="stat-total-actions">3</div>
-            <div class="stat-label">Actions</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-number red" id="stat-total-overdue">1</div>
-            <div class="stat-label">En Retard</div>
-          </div>
+        <div style="font-size:1rem; font-weight:800; color:var(--text-main); margin-top:2px;">
+          Interact Platform
         </div>
       </div>
 
-      <!-- Bureau Exécutif / Leadership -->
-      <div class="section-header">
-        <span class="section-title">👑 Bureau Exécutif</span>
-        <button class="btn-link" onclick="window.app.switchTab('protocol')">Voir Tout</button>
-      </div>
-      <div class="bureau-scroll" id="bureau-scroll-container">
-        <!-- Dynamically populated -->
-      </div>
-
-      <!-- Feed d'annonces officielles -->
-      <div class="section-header" style="margin-top: 18px;">
-        <span class="section-title">📢 Annonces Officielles</span>
-        <button id="btn-new-announcement" class="btn-link" onclick="window.app.openNewAnnouncementModal()">
-          + Publier
-        </button>
-      </div>
-      <div class="feed-list" id="announcements-feed-container">
-        <!-- Dynamically populated -->
-      </div>
-    </section>
-
-    <!-- ================= TAB 2: COMMISSIONS ================= -->
-    <section id="view-commissions" class="view-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">👥 Commissions & Projets</h2>
-          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
-            Arborescence : Commission ➔ Actions ➔ Tâches
-          </p>
-        </div>
-      </div>
-
-      <div id="commissions-list-container">
-        <!-- Dynamically populated with expandable commission cards -->
-      </div>
-    </section>
-
-    <!-- ================= TAB 3: MES TÂCHES ================= -->
-    <section id="view-tasks" class="view-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">📋 Suivi des Tâches & To-Do</h2>
-          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
-            Triées par urgence temporelle et criticité
-          </p>
-        </div>
-      </div>
-
-      <!-- Urgency Filter Chips -->
-      <div class="tasks-filter-bar" id="tasks-filter-chips">
-        <div class="filter-chip active" data-filter="all" onclick="window.tasksManager.setFilter('all')">
-          Toutes
-        </div>
-        <div class="filter-chip" data-filter="mine" onclick="window.tasksManager.setFilter('mine')">
-          👤 Mes Tâches
-        </div>
-        <div class="filter-chip" data-filter="overdue" onclick="window.tasksManager.setFilter('overdue')">
-          🚨 Retards Critiques
-        </div>
-        <div class="filter-chip" data-filter="completed" onclick="window.tasksManager.setFilter('completed')">
-          ✓ Terminées
-        </div>
-      </div>
-
-      <div class="tasks-container" id="tasks-board-container">
-        <!-- Dynamically populated -->
-      </div>
-    </section>
-
-    <!-- ================= TAB 4: PROTOCOLE & RH ================= -->
-    <section id="view-protocol" class="view-section">
-      <!-- Protocole Hero Watchdog -->
-      <div class="protocol-hero">
-        <div class="protocol-header-title">
-          <h3>⚖️ Protocole & Discipline</h3>
-          <button id="btn-protocol-scan" class="btn-scan-deadlines" onclick="window.protocolManager.runDeadlinesWatchdog(true)">
-            <span>⚡ Scanner Retards</span>
+      <ul class="sidebar-nav-list">
+        <li>
+          <button class="sidebar-nav-btn active" data-tab="home">
+            <span>🏠</span>
+            <span>Accueil & Bureau</span>
           </button>
-        </div>
-        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
-          Moteur automatique de détection des échéances dépassées et gestion des sanctions du club.
-        </p>
-        <div style="display:flex; gap:8px;">
-          <button id="btn-manual-sanction" class="btn-secondary" style="font-size:0.75rem; width:100%;" onclick="window.protocolManager.openNewSanctionModal()">
-            ⚡ Sanction Manuelle Protocole
+        </li>
+        <li>
+          <button class="sidebar-nav-btn" data-tab="channels">
+            <span>💬</span>
+            <span>Canaux & Meet</span>
           </button>
-        </div>
-      </div>
+        </li>
+        <li>
+          <button class="sidebar-nav-btn" data-tab="commissions">
+            <span>👥</span>
+            <span>Commissions & Actions</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar-nav-btn" data-tab="tasks">
+            <span>📋</span>
+            <span>Mes Tâches & Livrables</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar-nav-btn" data-tab="calendar">
+            <span>📅</span>
+            <span>Planning & Calendrier</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar-nav-btn" data-tab="protocol">
+            <span>⚖️</span>
+            <span>Protocole & RH</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar-nav-btn" data-tab="ai">
+            <span>🤖</span>
+            <span>Interact Assistant IA</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar-nav-btn" data-tab="settings">
+            <span>⚙️</span>
+            <span>Profil & Paramètres</span>
+          </button>
+        </li>
+      </ul>
+    </aside>
 
-      <!-- Sanctions List -->
-      <div class="section-header">
-        <span class="section-title">🚨 Registre des Sanctions</span>
-      </div>
-      <div class="sanctions-list" id="protocol-sanctions-container" style="margin-bottom: 24px;">
-        <!-- Dynamically populated -->
-      </div>
+    <!-- MAIN VIEWPORT CONTAINER (SPA VIEWS) -->
+    <main class="main-viewport">
 
-      <!-- HR & Members Matrix -->
-      <div class="section-header">
-        <div>
-          <span class="section-title">👥 Matrice Membres & Rôles RH</span>
-          <p style="font-size:0.75rem; color:var(--text-muted);">Gestion du tableau des membres par le Secrétariat</p>
-        </div>
-      </div>
-      <div id="protocol-members-container">
-        <!-- Dynamically populated -->
-      </div>
-    </section>
+      <!-- ================= TAB 1: ACCUEIL ================= -->
+      <section id="view-home" class="view-section active">
+        <!-- Club Hero Banner -->
+        <div class="glass-card club-hero-card gold-border">
+          <div class="hero-meta">
+            <span class="hero-badge-rotary">⚙️ ROTARY CLUB SPONSOR</span>
+            <span class="header-badge" style="background:rgba(0,240,255,0.15); color:var(--neon-cyan); border-color:var(--border-cyan);">
+              2025-2026
+            </span>
+          </div>
+          <h2 class="club-title">Interact Club Carthage</h2>
+          <p class="club-subtitle">« Servir d'abord » • District 9010 • Lead, Connect, Inspire</p>
 
-    <!-- ================= TAB 5: ASSISTANT IA (GEMINI) ================= -->
-    <section id="view-ai" class="view-section">
-      <div class="ai-chat-wrapper">
-        <div class="ai-chat-header">
-          <div class="ai-profile">
-            <div class="ai-avatar">🤖</div>
-            <div>
-              <div class="ai-title">Interact IA Assistant</div>
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span class="ai-model-tag">Gemini 3.6 Flash</span>
-                <span style="font-size:0.7rem; color:var(--success-green);">● En ligne</span>
-              </div>
+          <div class="hero-stats-grid">
+            <div class="stat-box">
+              <div class="stat-number cyan" id="stat-total-members">10</div>
+              <div class="stat-label">Membres</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number gold" id="stat-total-actions">3</div>
+              <div class="stat-label">Actions</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number red" id="stat-total-overdue">1</div>
+              <div class="stat-label">En Retard</div>
             </div>
           </div>
         </div>
 
-        <!-- Quick Prompt Chips -->
-        <div class="ai-quick-prompts">
-          <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Quelles sont les responsabilités exactes du Responsable Protocole dans un club Interact ?')">
-            💼 Rôle Protocole
-          </div>
-          <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Rédige une lettre de motivation convaincante pour postuler au poste de Vice-Président du club Interact.')">
-            ✍️ Lettre de Motivation
-          </div>
-          <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Propose un plan d\'action détaillé et original pour une action sociale d\'aide aux enfants hospitalisés.')">
-            🎯 Plan Action Sociale
-          </div>
-          <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Rédige un modèle de demande de sponsoring pour une entreprise locale pour financer notre projet solidaire.')">
-            🤝 Demande Sponsoring
-          </div>
-          <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Donne-moi la structure type d\'un compte-rendu de réunion statutaire Interact.')">
-            📝 Compte-rendu Type
-          </div>
+        <!-- Bureau Exécutif -->
+        <div class="section-header">
+          <span class="section-title">👑 Bureau Exécutif</span>
+          <button class="btn-link" onclick="window.app.switchTab('protocol')">Voir Tout</button>
         </div>
-
-        <!-- Chat Messages -->
-        <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="bureau-scroll" id="bureau-scroll-container">
           <!-- Dynamically populated -->
         </div>
 
-        <!-- Input Bar -->
-        <div class="ai-chat-input-row">
-          <input 
-            type="text" 
-            id="ai-chat-input" 
-            class="ai-input" 
-            placeholder="Posez une question sur Interact, les statuts, une action..." 
-            onkeydown="if(event.key==='Enter') window.aiAssistant.handleSendMessage()"
-          />
-          <button class="ai-send-btn" onclick="window.aiAssistant.handleSendMessage()" title="Envoyer">
-            ➤
+        <!-- Feed d'annonces officielles -->
+        <div class="section-header" style="margin-top: 18px;">
+          <span class="section-title">📢 Annonces Officielles</span>
+          <button id="btn-new-announcement" class="btn-link" onclick="window.app.openNewAnnouncementModal()">
+            + Publier
           </button>
         </div>
-      </div>
-    </section>
+        <div class="feed-list" id="announcements-feed-container">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
 
-    <!-- ================= TAB 6: PARAMÈTRES & PROFIL ================= -->
-    <section id="view-settings" class="view-section">
-      <!-- Profile Card -->
-      <div class="glass-card gold-border">
-        <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
-          <div class="user-avatar-btn" style="width:52px; height:52px; font-size:1.3rem;">
-            👤
-          </div>
+      <!-- ================= TAB 2: CANAUX & MEET ================= -->
+      <section id="view-channels" class="view-section">
+        <!-- Dynamically populated by channels.js -->
+      </section>
+
+      <!-- ================= TAB 3: COMMISSIONS ================= -->
+      <section id="view-commissions" class="view-section">
+        <div class="section-header">
           <div>
-            <h3 id="profile-user-name" style="font-size:1.1rem; color:#FFF;">Youssef Mahjoub</h3>
-            <p id="profile-user-role" style="font-size:0.8rem; color:var(--interact-gold); font-weight:600;">👑 Président</p>
-            <p id="profile-user-email" style="font-size:0.75rem; color:var(--text-muted);">president@interact-carthage.org</p>
+            <h2 class="section-title">👥 Commissions & Projets</h2>
+            <p style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+              Arborescence : Commission ➔ Actions ➔ Tâches
+            </p>
           </div>
         </div>
-        <div style="background:rgba(0,0,0,0.25); padding:10px; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:0.8rem; color:var(--text-muted);">Statut Disciplinaire</span>
-          <span id="profile-user-strikes" class="header-badge" style="background:rgba(52,199,89,0.15); color:var(--success-green); border-color:rgba(52,199,89,0.3);">
-            0 Strike
-          </span>
+
+        <div id="commissions-list-container">
+          <!-- Dynamically populated with expandable commission cards -->
         </div>
-      </div>
+      </section>
 
-      <!-- Quick Role Simulation Switcher -->
-      <div class="glass-card">
-        <h4 style="font-size:0.95rem; color:#FFF; margin-bottom:6px;">🎭 Simulateur de Rôles & Permissions</h4>
-        <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
-          Basculez instantanément entre les membres pour tester les contrôles d'accès RBAC (Président, Secrétaire, Protocole, Chef Commission, Membre, Recrue).
-        </p>
-        <div class="form-group">
-          <label class="form-label">Changer d'utilisateur actif</label>
-          <select id="role-switcher-select" class="form-select" onchange="window.app.handleRoleSwitch(this.value)">
-            <!-- Populated dynamically -->
-          </select>
+      <!-- ================= TAB 4: MES TÂCHES & LIVRABLES ================= -->
+      <section id="view-tasks" class="view-section">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">📋 Suivi des Tâches & Livrables</h2>
+            <p style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+              Cliquez sur une tâche pour ouvrir son Espace de Rendu et déposer vos fichiers.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <!-- Gemini AI Settings -->
-      <div class="glass-card">
-        <h4 style="font-size:0.95rem; color:#FFF; margin-bottom:6px;">🤖 Configuration IA Gemini</h4>
-        <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
-          Clé API Google Gemini (Modèle configuré : <code>gemini-3.6-flash</code>).
-        </p>
-        <div class="form-group">
-          <label class="form-label">Clé API Google Gemini</label>
-          <input type="password" id="settings-gemini-key" class="form-input" placeholder="Clé API Gemini..." />
+        <!-- Urgency Filter Chips -->
+        <div class="tasks-filter-bar" id="tasks-filter-chips">
+          <div class="filter-chip active" data-filter="all" onclick="window.tasksManager.setFilter('all')">
+            Toutes
+          </div>
+          <div class="filter-chip" data-filter="mine" onclick="window.tasksManager.setFilter('mine')">
+            👤 Mes Tâches
+          </div>
+          <div class="filter-chip" data-filter="overdue" onclick="window.tasksManager.setFilter('overdue')">
+            🚨 Retards Critiques
+          </div>
+          <div class="filter-chip" data-filter="completed" onclick="window.tasksManager.setFilter('completed')">
+            ✓ Terminées
+          </div>
         </div>
-        <button class="btn-secondary" style="width:100%;" onclick="window.app.handleSaveApiKey()">
-          💾 Sauvegarder la Clé API
-        </button>
-      </div>
 
-      <!-- Data Management & Reset -->
-      <div class="glass-card">
-        <h4 style="font-size:0.95rem; color:#FFF; margin-bottom:6px;">🛠️ Gestion & Démonstration</h4>
-        <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
-          Réinitialiser la base de données locale du club aux données de démonstration initiales.
-        </p>
-        <button class="btn-secondary" style="width:100%; border-color:rgba(255,59,48,0.4); color:var(--urgent-red);" onclick="window.app.handleResetData()">
-          🔄 Réinitialiser les données du Club
-        </button>
-      </div>
+        <div class="tasks-container" id="tasks-board-container">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
 
-      <!-- About Footer -->
-      <div style="text-align:center; padding: 16px 0; color:var(--text-dim); font-size:0.75rem;">
-        <p><strong>Interact Club Platform PWA v1.0.0</strong></p>
-        <p>Parrainé par le Rotary Club • Service Above Self</p>
-      </div>
-    </section>
+      <!-- ================= TAB 5: PLANNING & CALENDRIER ================= -->
+      <section id="view-calendar" class="view-section">
+        <!-- Dynamically populated by calendar.js -->
+      </section>
 
-  </main>
+      <!-- ================= TAB 6: PROTOCOLE & RH ================= -->
+      <section id="view-protocol" class="view-section">
+        <!-- Protocole Hero Watchdog -->
+        <div class="glass-card" style="background:linear-gradient(135deg, rgba(255,59,48,0.15), var(--bg-card)); border-color:rgba(255,59,48,0.35);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="font-size:1.1rem; font-weight:800; color:var(--text-main);">⚖️ Protocole & Discipline</h3>
+            <button id="btn-protocol-scan" class="btn-primary" style="background:linear-gradient(135deg, #FF3B30, #D90429); color:#FFF; width:auto; padding:6px 12px; font-size:0.75rem;" onclick="window.protocolManager.runDeadlinesWatchdog(true)">
+              <span>⚡ Scanner Retards</span>
+            </button>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
+            Moteur automatique de détection des échéances dépassées et gestion des sanctions.
+          </p>
+          <button id="btn-manual-sanction" class="btn-secondary" style="font-size:0.75rem; width:100%;" onclick="window.protocolManager.openNewSanctionModal()">
+            ⚡ Sanction Manuelle Protocole
+          </button>
+        </div>
+
+        <!-- Sanctions List -->
+        <div class="section-header">
+          <span class="section-title">🚨 Registre des Sanctions</span>
+        </div>
+        <div class="sanctions-list" id="protocol-sanctions-container" style="margin-bottom: 24px;">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- HR & Members Matrix -->
+        <div class="section-header">
+          <div>
+            <span class="section-title">👥 Matrice Membres & Rôles RH</span>
+            <p style="font-size:0.75rem; color:var(--text-muted);">Gestion du tableau des membres par le Secrétariat</p>
+          </div>
+        </div>
+        <div id="protocol-members-container">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 7: ASSISTANT IA (GEMINI) ================= -->
+      <section id="view-ai" class="view-section">
+        <div class="glass-card" style="padding:0; overflow:hidden;">
+          <div style="padding:14px 16px; background:linear-gradient(90deg, rgba(0,51,102,0.8), var(--bg-card)); border-bottom:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, #00F0FF, #003366); display:flex; align-items:center; justify-content:center; font-size:1.2rem;">🤖</div>
+              <div>
+                <div style="font-weight:700; color:#FFF; font-size:0.95rem;">Interact IA Assistant</div>
+                <span class="header-badge" style="background:rgba(0,240,255,0.2); color:var(--neon-cyan); border-color:var(--border-cyan);">Gemini 3.6 Flash</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Prompt Chips -->
+          <div style="padding:10px 14px; display:flex; gap:8px; overflow-x:auto; background:rgba(0,0,0,0.15); border-bottom:1px solid var(--border-subtle);">
+            <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Quelles sont les responsabilités exactes du Responsable Protocole dans un club Interact ?')">
+              💼 Rôle Protocole
+            </div>
+            <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Rédige une lettre de motivation convaincante pour postuler au poste de Vice-Président du club Interact.')">
+              ✍️ Lettre de Motivation
+            </div>
+            <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Propose un plan d\'action détaillé et original pour une action sociale d\'aide aux enfants hospitalisés.')">
+              🎯 Plan Action Sociale
+            </div>
+            <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Rédige un modèle de demande de sponsoring pour une entreprise locale pour financer notre projet solidaire.')">
+              🤝 Demande Sponsoring
+            </div>
+            <div class="prompt-chip" onclick="window.aiAssistant.sendQuickPrompt('Donne-moi la structure type d\'un compte-rendu de réunion statutaire Interact.')">
+              📝 Compte-rendu Type
+            </div>
+          </div>
+
+          <!-- Chat Messages -->
+          <div class="ai-chat-messages" id="ai-chat-messages" style="height:380px; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Input Bar -->
+          <div style="padding:12px; display:flex; gap:8px; border-top:1px solid var(--border-subtle);">
+            <input 
+              type="text" 
+              id="ai-chat-input" 
+              class="form-input" 
+              placeholder="Posez une question sur Interact, les statuts, une action..." 
+              onkeydown="if(event.key==='Enter') window.aiAssistant.handleSendMessage()"
+            />
+            <button class="btn-primary" style="width:auto; padding:0 18px;" onclick="window.aiAssistant.handleSendMessage()">
+              ➤
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 8: PARAMÈTRES & PROFIL ================= -->
+      <section id="view-settings" class="view-section">
+        <!-- Profile Card -->
+        <div class="glass-card gold-border">
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+            <div class="user-avatar-btn" style="width:52px; height:52px; font-size:1.3rem;">
+              👤
+            </div>
+            <div>
+              <h3 id="profile-user-name" style="font-size:1.1rem; color:var(--text-main);">Youssef Mahjoub</h3>
+              <p id="profile-user-role" style="font-size:0.8rem; color:var(--interact-gold); font-weight:600;">👑 Président</p>
+              <p id="profile-user-email" style="font-size:0.75rem; color:var(--text-muted);">president@interact-carthage.org</p>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:10px; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.8rem; color:var(--text-muted);">Statut Disciplinaire</span>
+            <span id="profile-user-strikes" class="header-badge" style="background:rgba(52,199,89,0.15); color:var(--success-green); border-color:rgba(52,199,89,0.3);">
+              0 Strike
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Role Simulation Switcher -->
+        <div class="glass-card">
+          <h4 style="font-size:0.95rem; color:var(--text-main); margin-bottom:6px;">🎭 Simulateur de Rôles & Permissions</h4>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
+            Basculez instantanément entre les membres pour tester les contrôles d'accès RBAC (Président, Secrétaire, Protocole, Chef Commission, Membre, Recrue).
+          </p>
+          <div class="form-group">
+            <label class="form-label">Changer d'utilisateur actif</label>
+            <select id="role-switcher-select" class="form-select" onchange="window.app.handleRoleSwitch(this.value)">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Theme Switcher -->
+        <div class="glass-card">
+          <h4 style="font-size:0.95rem; color:var(--text-main); margin-bottom:6px;">🎨 Thème d'Affichage</h4>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
+            Basculez entre le thème Sombre Obsidian et le thème Clair Rotary.
+          </p>
+          <button class="btn-secondary" style="width:100%;" onclick="window.themeManager.toggleTheme()">
+            ☀️ / 🌙 Basculer Mode Clair / Mode Sombre
+          </button>
+        </div>
+
+        <!-- Gemini AI Settings -->
+        <div class="glass-card">
+          <h4 style="font-size:0.95rem; color:var(--text-main); margin-bottom:6px;">🤖 Configuration IA Gemini</h4>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
+            Clé API Google Gemini (Modèle : <code>gemini-3.6-flash</code>).
+          </p>
+          <div class="form-group">
+            <label class="form-label">Clé API Google Gemini</label>
+            <input type="password" id="settings-gemini-key" class="form-input" placeholder="Clé API Gemini..." />
+          </div>
+          <button class="btn-secondary" style="width:100%;" onclick="window.app.handleSaveApiKey()">
+            💾 Sauvegarder la Clé API
+          </button>
+        </div>
+
+        <!-- Data Management & Reset -->
+        <div class="glass-card">
+          <h4 style="font-size:0.95rem; color:var(--text-main); margin-bottom:6px;">🛠️ Gestion & Démonstration</h4>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
+            Réinitialiser la base de données locale du club aux données de démonstration initiales.
+          </p>
+          <button class="btn-secondary" style="width:100%; border-color:rgba(255,59,48,0.4); color:var(--urgent-red);" onclick="window.app.handleResetData()">
+            🔄 Réinitialiser les données du Club
+          </button>
+        </div>
+
+        <!-- About Footer -->
+        <div style="text-align:center; padding: 16px 0; color:var(--text-dim); font-size:0.75rem;">
+          <p><strong>Interact Club Platform PWA v2.0.0</strong></p>
+          <p>Parrainé par le Rotary Club • Service Above Self</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
   <!-- ==========================================================================
        BOTTOM TAB NAVIGATION BAR (MOBILE PWA)
@@ -338,6 +434,10 @@
     <button class="nav-tab-btn active" data-tab="home">
       <span class="nav-tab-icon">🏠</span>
       <span class="nav-tab-label">Accueil</span>
+    </button>
+    <button class="nav-tab-btn" data-tab="channels">
+      <span class="nav-tab-icon">💬</span>
+      <span class="nav-tab-label">Canaux</span>
     </button>
     <button class="nav-tab-btn" data-tab="commissions">
       <span class="nav-tab-icon">👥</span>
@@ -350,16 +450,16 @@
       </span>
       <span class="nav-tab-label">Tâches</span>
     </button>
+    <button class="nav-tab-btn" data-tab="calendar">
+      <span class="nav-tab-icon">📅</span>
+      <span class="nav-tab-label">Planning</span>
+    </button>
     <button class="nav-tab-btn" data-tab="protocol">
       <span class="nav-tab-icon">
         ⚖️
         <span class="nav-tab-badge" id="protocol-nav-badge" style="display:none;">0</span>
       </span>
       <span class="nav-tab-label">Protocole</span>
-    </button>
-    <button class="nav-tab-btn" data-tab="ai">
-      <span class="nav-tab-icon">💬</span>
-      <span class="nav-tab-label">Interact IA</span>
     </button>
     <button class="nav-tab-btn" data-tab="settings">
       <span class="nav-tab-icon">⚙️</span>
@@ -390,11 +490,15 @@
   <!-- ==========================================================================
        APPLICATION SCRIPTS
        ========================================================================== -->
+  <script src="./js/theme.js"></script>
   <script src="./js/firebase-config.js"></script>
   <script src="./js/auth.js"></script>
   <script src="./js/commissions.js"></script>
   <script src="./js/tasks.js"></script>
+  <script src="./js/task-workspace.js"></script>
   <script src="./js/protocol.js"></script>
+  <script src="./js/channels.js"></script>
+  <script src="./js/calendar.js"></script>
   <script src="./js/ai-assistant.js"></script>
   <script src="./js/app.js"></script>
 

@@ -152,6 +152,16 @@ class TasksManager {
     filtered.forEach(task => {
       const isChecked = task.status === 'completed';
       const canToggle = window.authManager.canCompleteTask(task);
+      const submissions = window.dbStore.getTaskSubmissions(task.id);
+      const hasSubmissions = Object.keys(submissions).length > 0;
+      const hasValidatedSub = Object.values(submissions).some(s => s.validated);
+
+      let deliverableBadge = '';
+      if (hasValidatedSub) {
+        deliverableBadge = `<span class="deadline-badge badge-done" style="font-size:0.68rem;">📎 Livrable Validé</span>`;
+      } else if (hasSubmissions) {
+        deliverableBadge = `<span class="deadline-badge badge-warning" style="font-size:0.68rem;">⏳ Livrable en Attente</span>`;
+      }
 
       html += `
         <div class="task-item ${task.urgencyClass}" id="task-card-${task.id}">
@@ -162,12 +172,16 @@ class TasksManager {
             ${!canToggle ? 'disabled' : ''}
             onchange="window.tasksManager.handleToggleTask('${task.commissionId}', '${task.actionId}', '${task.id}', this.checked)"
           />
-          <div class="task-body">
+          <div class="task-body" onclick="window.taskWorkspaceManager.openWorkspace('${task.commissionId}', '${task.actionId}', '${task.id}')" style="cursor:pointer;">
             <div class="task-title">${task.title}</div>
             <div class="task-meta">
               <span class="deadline-badge ${task.badgeClass}">${task.badgeText}</span>
+              ${deliverableBadge}
               <span style="color:var(--interact-gold);">📁 ${task.commissionName}</span>
               <span class="task-assignee">👤 ${task.assignedNames.join(', ') || 'Non assigné'}</span>
+              <span class="btn-link" style="font-size:0.72rem; padding:0; margin-left:auto;">
+                Ouvrir l'Espace ➔
+              </span>
             </div>
           </div>
         </div>

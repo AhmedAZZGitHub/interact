@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserRole(clubId) {
+      return get(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid)).data.role;
+    }
+
+    function isExecutiveBoard(clubId) {
+      let role = getUserRole(clubId);
+      return role in ['president', 'vice_president', 'secretaire', 'protocole'];
+    }
+
+    function isClubMember(clubId) {
+      return exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid));
+    }
+
+    // Clubs Collection
+    match /clubs/{clubId} {
+      allow read: if isAuthenticated() && isClubMember(clubId);
+      allow write: if isAuthenticated() && isExecutiveBoard(clubId);
+
+      // Members Subcollection
+      match /members/{userId} {
+        allow read: if isAuthenticated() && isClubMember(clubId);
+        allow write: if isAuthenticated() && isExecutiveBoard(clubId);
+      }
+
+      // Channels Subcollection
+      match /channels/{channelId} {
+        allow read: if isAuthenticated() && isClubMember(clubId);
+        // Announcements channels: Only Executive Board can create/update
+        // Commission / Task channels: Chefs & Board can create/manage
+        allow write: if isAuthenticated() && (
+          isExecutiveBoard(clubId) || 
+          getUserRole(clubId) in ['chef_commission', 'co_chef', 'representant']
+        );
+
+        // Messages inside Channel
+        match /messages/{messageId} {
+          allow read: if isAuthenticated() && isClubMember(clubId);
+          
+          // Writing messages:
+          // In 'announcements' channel: Only Executive Board can post messages
+          // In other channels: Any club member can write messages
+          allow create: if isAuthenticated() && isClubMember(clubId) && (
+            get(/databases/$(database)/documents/clubs/$(clubId)/channels/$(channelId)).data.type != 'announcements' ||
+            isExecutiveBoard(clubId)
+          );
+
+          // Updating reactions: Any member can update emoji reactions
+          allow update: if isAuthenticated() && isClubMember(clubId) && (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) ||
+            resource.data.senderId == request.auth.uid ||
+            isExecutiveBoard(clubId)
+          );
+
+          allow delete: if isAuthenticated() && (
+            resource.data.senderId == request.auth.uid ||
+            isExecutiveBoard(clubId)
+          );
+        }
+      }
+
+      // Task Submissions Subcollection
+      match /task_submissions/{submissionId} {
+        allow read: if isAuthenticated() && isClubMember(clubId);
+        // Assigned members can submit deliverables
+        allow create: if isAuthenticated() && isClubMember(clubId);
+        // Only Commission Chef or Board can validate submission
+        allow update: if isAuthenticated() && (
+          isExecutiveBoard(clubId) ||
+          getUserRole(clubId) in ['chef_commission', 'co_chef'] ||
+          resource.data.submittedBy.hasAny([request.auth.uid])
+        );
+        allow delete: if isAuthenticated() && isExecutiveBoard(clubId);
+      }
+
+      // Events & Schedule
+      match /events_schedule/{eventId} {
+        allow read: if isAuthenticated() && isClubMember(clubId);
+        allow write: if isAuthenticated() && (
+          isExecutiveBoard(clubId) ||
+          getUserRole(clubId) in ['chef_commission', 'representant']
+        );
+      }
+
+      // Sanctions
+      match /sanctions/{sanctionId} {
+        allow read: if isAuthenticated() && isClubMember(clubId);
+        allow write: if isAuthenticated() && (
+          isExecutiveBoard(clubId) ||
+          getUserRole(clubId) == 'protocole'
+        );
+      }
+    }
+  }
+}
