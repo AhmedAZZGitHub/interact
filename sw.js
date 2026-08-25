@@ -1,4 +1,4 @@
-const CACHE_NAME = 'interact-pwa-v1.0.0';
+const CACHE_NAME = 'interact-pwa-v3.2.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -14,14 +14,18 @@ const ASSETS_TO_CACHE = [
   './js/calendar.js',
   './js/ai-assistant.js',
   './js/app.js',
-  './manifest.json'
+  './manifest.json',
+  './icons/icon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -39,8 +43,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network-First Strategy for fresh CSS & JS
 self.addEventListener('fetch', (event) => {
-  // Pass-through for Firebase & Gemini APIs
   if (event.request.url.includes('firebaseio.com') || 
       event.request.url.includes('googleapis.com') ||
       event.request.url.includes('gstatic.com')) {
@@ -48,25 +52,23 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          if (event.request.headers.get('accept')?.includes('text/html')) {
+            return caches.match('./index.html');
+          }
         });
-        return response;
-      }).catch(() => {
-        // Fallback for HTML navigation
-        if (event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('./index.html');
-        }
-      });
-    })
+      })
   );
 });
