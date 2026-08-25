@@ -14,7 +14,10 @@ class AppController {
   init() {
     console.log("🚀 Initializing Interact Club Platform...");
 
-    // Register Service Worker for PWA
+    // 1. Setup Navigation Event Listeners FIRST so UI is always responsive
+    this.setupNavigation();
+
+    // 2. Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').then(reg => {
         console.log("📱 PWA Service Worker registered:", reg.scope);
@@ -23,12 +26,14 @@ class AppController {
       });
     }
 
-    // Initialize sub-modules safely
+    // 3. Initialize sub-modules safely with error isolation
     const safeInit = (name, mgr) => {
       try {
-        if (mgr && typeof mgr.init === 'function') mgr.init();
+        if (mgr && typeof mgr.init === 'function') {
+          mgr.init();
+        }
       } catch (err) {
-        console.error(`Error initializing ${name}:`, err);
+        console.error(`Error initializing module [${name}]:`, err);
       }
     };
 
@@ -39,63 +44,99 @@ class AppController {
     safeInit('channelsManager', window.channelsManager);
     safeInit('calendarManager', window.calendarManager);
 
-    // Render Home & Settings safely
+    // 4. Render Home, Settings and Header safely
     try { this.renderHome(); } catch(e) { console.error('Error in renderHome:', e); }
     try { this.renderSettings(); } catch(e) { console.error('Error in renderSettings:', e); }
     try { this.updateHeaderUI(); } catch(e) { console.error('Error in updateHeaderUI:', e); }
 
-    // Attach Navigation Event Listeners (Both Mobile Bottom Bar & Desktop Sidebar)
-    document.querySelectorAll('.nav-tab-btn, .sidebar-nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        if (tab) this.switchTab(tab);
-      });
-    });
-
-    // Subscribe to DB & Auth changes for automatic updates
+    // 5. Subscribe to DB & Auth changes for reactive state updates
     if (window.dbStore) {
       window.dbStore.subscribe(() => {
-        this.renderHome();
-        this.renderSettings();
-        this.updateHeaderUI();
-        this.updateBadges();
+        try {
+          this.renderHome();
+          this.renderSettings();
+          this.updateHeaderUI();
+          this.updateBadges();
+        } catch (e) {
+          console.error('Error on DB update sync:', e);
+        }
       });
     }
 
     if (window.authManager) {
       window.authManager.onAuthChange(() => {
-        this.renderHome();
-        this.renderSettings();
-        this.updateHeaderUI();
-        this.updateRoleGatekeeping();
+        try {
+          this.renderHome();
+          this.renderSettings();
+          this.updateHeaderUI();
+          this.updateRoleGatekeeping();
+        } catch (e) {
+          console.error('Error on Auth change sync:', e);
+        }
       });
     }
 
-    this.updateBadges();
-    this.updateRoleGatekeeping();
+    try { this.updateBadges(); } catch (e) { console.error(e); }
+    try { this.updateRoleGatekeeping(); } catch (e) { console.error(e); }
+  }
+
+  setupNavigation() {
+    try {
+      // Attach Navigation Event Listeners (Both Mobile Bottom Bar & Desktop Sidebar)
+      document.querySelectorAll('.nav-tab-btn, .sidebar-nav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const tab = btn.dataset.tab;
+          if (tab) this.switchTab(tab);
+        });
+      });
+
+      // Quick Role Pill click -> Switch to settings / role simulator
+      const rolePill = document.getElementById('header-role-pill');
+      if (rolePill) {
+        rolePill.addEventListener('click', () => this.switchTab('settings'));
+      }
+
+      // User Avatar click -> Switch to settings
+      const avatarBtn = document.getElementById('header-avatar-btn');
+      if (avatarBtn) {
+        avatarBtn.addEventListener('click', () => this.switchTab('settings'));
+      }
+    } catch (err) {
+      console.error('Error setting up navigation listeners:', err);
+    }
   }
 
   switchTab(tabName) {
-    this.currentTab = tabName;
+    try {
+      this.currentTab = tabName;
 
-    // Update bottom nav bar & sidebar buttons
-    document.querySelectorAll('.nav-tab-btn, .sidebar-nav-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tabName);
-    });
+      // Update bottom nav bar & sidebar buttons
+      document.querySelectorAll('.nav-tab-btn, .sidebar-nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
 
-    // Update view sections
-    document.querySelectorAll('.view-section').forEach(view => {
-      view.classList.toggle('active', view.id === `view-${tabName}`);
-    });
+      // Update view sections
+      document.querySelectorAll('.view-section').forEach(view => {
+        view.classList.toggle('active', view.id === `view-${tabName}`);
+      });
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Refresh sub-views when focused
-    if (tabName === 'tasks' && window.tasksManager) window.tasksManager.render();
-    if (tabName === 'commissions' && window.commissionsManager) window.commissionsManager.render();
-    if (tabName === 'protocol' && window.protocolManager) window.protocolManager.render();
-    if (tabName === 'channels' && window.channelsManager) window.channelsManager.render();
-    if (tabName === 'calendar' && window.calendarManager) window.calendarManager.render();
+      // Refresh sub-views safely when focused
+      try {
+        if (tabName === 'tasks' && window.tasksManager) window.tasksManager.render();
+        if (tabName === 'commissions' && window.commissionsManager) window.commissionsManager.render();
+        if (tabName === 'protocol' && window.protocolManager) window.protocolManager.render();
+        if (tabName === 'channels' && window.channelsManager) window.channelsManager.render();
+        if (tabName === 'calendar' && window.calendarManager) window.calendarManager.render();
+        if (tabName === 'home') this.renderHome();
+      } catch (subErr) {
+        console.error(`Error rendering active tab [${tabName}]:`, subErr);
+      }
+    } catch (err) {
+      console.error(`Error switching to tab [${tabName}]:`, err);
+    }
   }
 
   updateHeaderUI() {
