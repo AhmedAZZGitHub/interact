@@ -1902,3 +1902,98 @@ body.light-theme .channels-sidebar-pane {
     border-radius: var(--radius-xl);
   }
 }
+
+/* ==========================================================================
+   FULLSCREEN AUTH GATEKEEPER OVERLAY (#auth-screen-overlay)
+   ========================================================================== */
+.auth-screen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top center, rgba(0, 51, 102, 0.9), #050B14 75%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.auth-screen-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.auth-card-main {
+  width: 100%;
+  maxWidth: 540px;
+  background: rgba(19, 27, 46, 0.95);
+  border: 1px solid rgba(247, 168, 27, 0.3);
+  border-radius: 24px;
+  padding: 32px 28px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 51, 102, 0.4);
+  animation: authFadeUp 0.4s ease-out;
+}
+
+@keyframes authFadeUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.auth-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-brand-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #003366, #001F3F);
+  border: 2px solid var(--interact-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 0 16px rgba(247, 168, 27, 0.3);
+}
+
+.auth-tabs-nav {
+  display: flex;
+  background: #0B1220;
+  padding: 4px;
+  border-radius: 100px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.auth-tab-trigger {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 100px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.auth-tab-trigger.active {
+  background: #003366;
+  color: #FFFFFF;
+  border: 1px solid var(--interact-gold);
+  box-shadow: 0 0 14px rgba(247, 168, 27, 0.3);
+}
+

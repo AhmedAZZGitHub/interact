@@ -170,6 +170,20 @@ class AuthManager {
     return newMember;
   }
 
+  logout() {
+    this.currentUser = null;
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch (e) {
+      console.warn("Error removing session:", e);
+    }
+    this.notify();
+    if (window.app) {
+      window.app.showAuthScreen();
+      window.app.showToast('Déconnexion effectuée. À bientôt ! 👋', 'info');
+    }
+  }
+
   /* ================= RBAC PERMISSIONS ================= */
 
   isPlatformSuperAdmin() {

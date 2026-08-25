@@ -78,6 +78,14 @@ class AppController {
 
     try { this.updateBadges(); } catch (e) { console.error(e); }
     try { this.updateRoleGatekeeping(); } catch (e) { console.error(e); }
+    try {
+      this.populateAuthScreenClubs();
+      if (!localStorage.getItem('interact_current_user_v2')) {
+        this.showAuthScreen();
+      } else {
+        this.hideAuthScreen();
+      }
+    } catch (e) { console.error(e); }
   }
 
   setupNavigation() {
@@ -407,6 +415,181 @@ class AppController {
     if (apiKeyInput && window.aiAssistant) {
       apiKeyInput.value = window.aiAssistant.apiKey || '';
     }
+  }
+
+  /* ================= FULLSCREEN AUTH SCREEN OVERLAY METHODS ================= */
+  showAuthScreen(defaultTab = 'login') {
+    const overlay = document.getElementById('auth-screen-overlay');
+    if (overlay) {
+      this.populateAuthScreenClubs();
+      overlay.classList.remove('hidden');
+      overlay.style.display = 'flex';
+      this.switchAuthOverlayTab(defaultTab);
+    }
+  }
+
+  hideAuthScreen() {
+    const overlay = document.getElementById('auth-screen-overlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      overlay.style.display = 'none';
+    }
+  }
+
+  populateAuthScreenClubs() {
+    const clubs = window.dbStore ? window.dbStore.getActiveClubs() : [];
+    let optionsHtml = '';
+    clubs.forEach(c => {
+      optionsHtml += `<option value="${c.id}">🏛️ ${c.name} (${c.district})</option>`;
+    });
+    if (!optionsHtml) {
+      optionsHtml = '<option value="club_carthage_01">🏛️ Interact Club Carthage (District 9010)</option>';
+    }
+
+    const loginSelect = document.getElementById('auth-screen-club-select');
+    const regSelect = document.getElementById('auth-reg-club-select');
+    if (loginSelect) loginSelect.innerHTML = optionsHtml;
+    if (regSelect) regSelect.innerHTML = optionsHtml;
+  }
+
+  switchAuthOverlayTab(tab) {
+    const loginSection = document.getElementById('auth-overlay-login-section');
+    const registerSection = document.getElementById('auth-overlay-register-section');
+    const btnLogin = document.getElementById('auth-tab-btn-login');
+    const btnRegister = document.getElementById('auth-tab-btn-register');
+
+    if (tab === 'login') {
+      if (loginSection) loginSection.style.display = 'block';
+      if (registerSection) registerSection.style.display = 'none';
+      if (btnLogin) btnLogin.classList.add('active');
+      if (btnRegister) btnRegister.classList.remove('active');
+    } else {
+      if (loginSection) loginSection.style.display = 'none';
+      if (registerSection) registerSection.style.display = 'block';
+      if (btnLogin) btnLogin.classList.remove('active');
+      if (btnRegister) btnRegister.classList.add('active');
+    }
+  }
+
+  quickFillSuperAdmin() {
+    const emailInput = document.getElementById('auth-screen-email');
+    const passInput = document.getElementById('auth-screen-password');
+    if (emailInput) emailInput.value = 'ahmedazzouzi72@gmail.com';
+    if (passInput) passInput.value = 'ADMIN2027';
+    this.checkSuperAdminLoginEmail('ahmedazzouzi72@gmail.com');
+  }
+
+  quickFillPresident() {
+    const emailInput = document.getElementById('auth-screen-email');
+    const passInput = document.getElementById('auth-screen-password');
+    const clubSelect = document.getElementById('auth-screen-club-select');
+    if (emailInput) emailInput.value = 'president@interact-carthage.org';
+    if (passInput) passInput.value = 'CARTHAGE2026';
+    if (clubSelect) clubSelect.value = 'club_carthage_01';
+    this.checkSuperAdminLoginEmail('president@interact-carthage.org');
+  }
+
+  handleAuthOverlayLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('auth-screen-email').value.trim();
+    const password = document.getElementById('auth-screen-password').value;
+    const clubSelect = document.getElementById('auth-screen-club-select');
+    const clubId = clubSelect ? clubSelect.value : null;
+
+    const res = window.authManager.login(email, password, clubId);
+    if (res.success) {
+      this.hideAuthScreen();
+      this.showToast(`Connexion réussie : Bienvenue ${res.user.displayName} ! 👑`, 'success');
+      this.renderHome();
+      this.renderSettings();
+      this.updateHeaderUI();
+      this.updateRoleGatekeeping();
+    } else {
+      this.showToast(res.message || 'Échec de connexion.', 'error');
+    }
+  }
+
+  handleOverlayRoleChange(role) {
+    const toggleBox = document.getElementById('auth-overlay-pres-toggle');
+    if (toggleBox) {
+      if (role === 'president') {
+        toggleBox.style.display = 'block';
+      } else {
+        toggleBox.style.display = 'none';
+        this.toggleOverlayClubCreation(false);
+      }
+    }
+  }
+
+  toggleOverlayClubCreation(isCreate) {
+    const joinBox = document.getElementById('auth-overlay-join-box');
+    const createBox = document.getElementById('auth-overlay-create-box');
+    const btnJoin = document.getElementById('btn-overlay-join-choice');
+    const btnCreate = document.getElementById('btn-overlay-create-choice');
+
+    if (isCreate) {
+      if (joinBox) joinBox.style.display = 'none';
+      if (createBox) createBox.style.display = 'block';
+      if (btnJoin) btnJoin.classList.remove('active');
+      if (btnCreate) btnCreate.classList.add('active');
+    } else {
+      if (joinBox) joinBox.style.display = 'block';
+      if (createBox) createBox.style.display = 'none';
+      if (btnJoin) btnJoin.classList.add('active');
+      if (btnCreate) btnCreate.classList.remove('active');
+    }
+  }
+
+  handleAuthOverlayRegister(event) {
+    event.preventDefault();
+    const displayName = document.getElementById('auth-reg-name').value.trim();
+    const email = document.getElementById('auth-reg-email').value.trim();
+    const password = document.getElementById('auth-reg-password').value;
+    const phoneNumber = document.getElementById('auth-reg-phone').value.trim();
+    const birthDate = document.getElementById('auth-reg-birth').value;
+    const requestedRole = document.getElementById('auth-reg-role-select').value;
+
+    const isCreatingClub = requestedRole === 'president' && 
+      document.getElementById('auth-overlay-create-box') && 
+      document.getElementById('auth-overlay-create-box').style.display !== 'none';
+
+    if (isCreatingClub) {
+      const clubName = document.getElementById('auth-reg-new-clubname').value.trim();
+      const district = document.getElementById('auth-reg-new-district').value.trim();
+      const city = document.getElementById('auth-reg-new-city').value.trim();
+
+      if (!clubName) {
+        this.showToast('Veuillez renseigner le nom de votre club.', 'error');
+        return;
+      }
+
+      window.authManager.registerPresidentWithClub(
+        { displayName, email, password, phoneNumber, birthDate },
+        { name: clubName, district, city }
+      );
+
+      this.hideAuthScreen();
+      this.showToast(`Club "${clubName}" créé ! Bienvenue Président ${displayName} 👑`, 'success');
+    } else {
+      const clubId = document.getElementById('auth-reg-club-select').value;
+      window.authManager.registerMemberJoiningClub({
+        displayName,
+        email,
+        password,
+        phoneNumber,
+        birthDate,
+        clubId,
+        requestedRole
+      });
+
+      this.hideAuthScreen();
+      this.showToast('Demande transmise au Président ! Statut : En attente de validation ⏳', 'warning');
+    }
+
+    this.renderHome();
+    this.renderSettings();
+    this.updateHeaderUI();
+    this.updateRoleGatekeeping();
   }
 
   /* ================= MULTI-TENANT AUTH & REGISTRATION MODALS ================= */

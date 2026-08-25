@@ -237,8 +237,8 @@
     }
   </style>
 
-  <!-- Master Stylesheet (Cache Busted v8.0) -->
-  <link rel="stylesheet" href="./css/styles.css?v=8.0" />
+  <!-- Master Stylesheet (Cache Busted v9.0) -->
+  <link rel="stylesheet" href="./css/styles.css?v=9.0" />
 
   <!-- Firebase Web SDK (Compat version) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -246,6 +246,185 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
+
+  <!-- ==========================================================================
+       FULLSCREEN AUTH GATEKEEPER SCREEN (#auth-screen-overlay)
+       Premier écran d'authentification au lancement ou à la déconnexion
+       ========================================================================== -->
+  <div id="auth-screen-overlay" class="auth-screen-overlay">
+    <div class="auth-card-main">
+      <!-- Brand Header -->
+      <div class="auth-brand-header">
+        <div class="auth-brand-logo">⚙️</div>
+        <div>
+          <h2 style="font-size:1.3rem; font-weight:800; color:#FFF; margin:0;">Interact Platform</h2>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Rotary International • District 9010</span>
+        </div>
+      </div>
+
+      <!-- Auth Screen Navigation Tabs -->
+      <div class="auth-tabs-nav">
+        <button type="button" class="auth-tab-trigger active" id="auth-tab-btn-login" onclick="window.app.switchAuthOverlayTab('login')">
+          🔑 Connexion
+        </button>
+        <button type="button" class="auth-tab-trigger" id="auth-tab-btn-register" onclick="window.app.switchAuthOverlayTab('register')">
+          📝 Inscription
+        </button>
+      </div>
+
+      <!-- Tab 1: Formulaire de Connexion -->
+      <div id="auth-overlay-login-section">
+        <form id="auth-screen-login-form" onsubmit="window.app.handleAuthOverlayLogin(event)">
+          <div class="form-group">
+            <label class="form-label">Adresse E-mail *</label>
+            <input 
+              type="email" 
+              id="auth-screen-email" 
+              class="form-input" 
+              placeholder="president@interact.org" 
+              required 
+              oninput="window.app.checkSuperAdminLoginEmail(this.value)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mot de passe *</label>
+            <input type="password" id="auth-screen-password" class="form-input" placeholder="••••••••" required />
+          </div>
+
+          <!-- Super Admin Bypass Notice -->
+          <div id="auth-screen-superadmin-badge" style="display:none; background:rgba(247,168,27,0.15); border:1px solid #F7A81B; color:#F7A81B; padding:10px 14px; border-radius:10px; font-size:0.78rem; margin-bottom:12px;">
+            🛡️ <strong>Accès Super Admin Global Détecté :</strong> Bypass automatique du sélecteur de club (Accès direct multi-clubs).
+          </div>
+
+          <!-- Standard Club Selector -->
+          <div class="form-group" id="auth-screen-club-group">
+            <label class="form-label">Sélectionnez votre Club Interact *</label>
+            <select id="auth-screen-club-select" class="form-select">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:8px; padding:13px; font-size:0.95rem;">
+            🔐 Se Connecter à mon Espace
+          </button>
+        </form>
+
+        <!-- Quick Credentials Shortcuts for Testing -->
+        <div style="margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:0.74rem; color:var(--text-muted); text-align:center; font-weight:700; text-transform:uppercase;">
+            ⚡ Raccourcis de Test & Démo
+          </div>
+          <button 
+            type="button" 
+            class="btn-secondary" 
+            style="color:#F7A81B; border-color:rgba(247,168,27,0.4); font-size:0.78rem; padding:8px;"
+            onclick="window.app.quickFillSuperAdmin()"
+          >
+            🛡️ Connexion Super Admin (ahmedazzouzi72@gmail.com)
+          </button>
+          <button 
+            type="button" 
+            class="btn-secondary" 
+            style="color:var(--accent-cyan); border-color:rgba(0,240,255,0.4); font-size:0.78rem; padding:8px;"
+            onclick="window.app.quickFillPresident()"
+          >
+            👑 Connexion Président (Interact Club Carthage)
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Formulaire d'Inscription -->
+      <div id="auth-overlay-register-section" style="display:none;">
+        <form id="auth-screen-register-form" onsubmit="window.app.handleAuthOverlayRegister(event)">
+          <div class="form-group">
+            <label class="form-label">Nom et Prénom *</label>
+            <input type="text" id="auth-reg-name" class="form-input" placeholder="Ex: Youssef Mahjoub" required />
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Email *</label>
+              <input type="email" id="auth-reg-email" class="form-input" placeholder="contact@interact.org" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mot de passe *</label>
+              <input type="password" id="auth-reg-password" class="form-input" placeholder="••••••••" required />
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Téléphone / WhatsApp</label>
+              <input type="tel" id="auth-reg-phone" class="form-input" placeholder="+216 98 123 456" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date de Naissance</label>
+              <input type="date" id="auth-reg-birth" class="form-input" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Poste Souhaité *</label>
+            <select id="auth-reg-role-select" class="form-select" onchange="window.app.handleOverlayRoleChange(this.value)">
+              <option value="membre">🔹 Membre Actif</option>
+              <option value="recrue">🌱 Recrue / Nouvel Adhérent</option>
+              <option value="chef_commission">💼 Chef de Commission</option>
+              <option value="co_chef">🤝 Co-Chef</option>
+              <option value="secretaire">📋 Secrétaire</option>
+              <option value="protocole">⚖️ Protocole</option>
+              <option value="vice_president">⭐ Vice-Président</option>
+              <option value="president">👑 Président (Création ou Adhésion)</option>
+            </select>
+          </div>
+
+          <!-- President Club Mode Toggle -->
+          <div id="auth-overlay-pres-toggle" style="display:none; background:#0E172A; padding:6px; border-radius:10px; margin-bottom:10px;">
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="cal-view-btn active" id="btn-overlay-join-choice" style="flex:1;" onclick="window.app.toggleOverlayClubCreation(false)">
+                🏛️ Rejoindre Club
+              </button>
+              <button type="button" class="cal-view-btn" id="btn-overlay-create-choice" style="flex:1;" onclick="window.app.toggleOverlayClubCreation(true)">
+                ✨ Créer nouveau Club
+              </button>
+            </div>
+          </div>
+
+          <!-- Join Section -->
+          <div id="auth-overlay-join-box">
+            <div class="form-group">
+              <label class="form-label">Club Interact à Rejoindre *</label>
+              <select id="auth-reg-club-select" class="form-select">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Create Club Section -->
+          <div id="auth-overlay-create-box" style="display:none; background:#0B1220; padding:12px; border-radius:12px; border:1px solid rgba(247,168,27,0.25); margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Nom du Nouveau Club *</label>
+              <input type="text" id="auth-reg-new-clubname" class="form-input" placeholder="Ex: Interact Club La Marsa" />
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group">
+                <label class="form-label">District</label>
+                <input type="text" id="auth-reg-new-district" class="form-input" value="District 9010" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ville</label>
+                <input type="text" id="auth-reg-new-city" class="form-input" placeholder="Ex: Tunis" />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width:100%; margin-top:8px; padding:13px; font-size:0.95rem;">
+            🚀 Finaliser l'Inscription
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <!-- ==========================================================================
        APP HEADER
@@ -288,6 +467,16 @@
       <div class="user-avatar-btn" id="header-avatar-btn" onclick="window.app.switchTab('settings')">
         Y
       </div>
+
+      <!-- Direct Auth Gate Button -->
+      <button 
+        class="theme-toggle-btn" 
+        style="border-color:var(--interact-gold); color:var(--interact-gold); font-size:0.9rem;" 
+        onclick="window.app.showAuthScreen()" 
+        title="Ouvrir l'écran de Connexion / Inscription"
+      >
+        🔑
+      </button>
     </div>
   </header>
 
@@ -578,12 +767,15 @@
               <p id="profile-user-email" style="font-size:0.75rem; color:var(--text-muted);">president@interact-carthage.org</p>
             </div>
           </div>
-          <div style="background:var(--bg-input); padding:10px; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+          <div style="background:var(--bg-input); padding:10px; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
             <span style="font-size:0.8rem; color:var(--text-muted);">Statut Disciplinaire</span>
             <span id="profile-user-strikes" class="header-badge" style="background:rgba(52,199,89,0.15); color:var(--success-green); border-color:rgba(52,199,89,0.3);">
               0 Strike
             </span>
           </div>
+          <button class="btn-secondary" style="width:100%; color:#FF3B30; border-color:rgba(255,59,48,0.4);" onclick="window.authManager.logout()">
+            🚪 Se Déconnecter / Changer de Compte
+          </button>
         </div>
 
         <!-- Multi-tenant Approval Portal Container -->
@@ -727,19 +919,19 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- ==========================================================================
-       APPLICATION SCRIPTS (CACHE BUSTED V8.0)
+       APPLICATION SCRIPTS (CACHE BUSTED V9.0)
        ========================================================================== -->
-  <script src="./js/theme.js?v=8.0"></script>
-  <script src="./js/firebase-config.js?v=8.0"></script>
-  <script src="./js/auth.js?v=8.0"></script>
-  <script src="./js/commissions.js?v=8.0"></script>
-  <script src="./js/tasks.js?v=8.0"></script>
-  <script src="./js/task-workspace.js?v=8.0"></script>
-  <script src="./js/protocol.js?v=8.0"></script>
-  <script src="./js/channels.js?v=8.0"></script>
-  <script src="./js/calendar.js?v=8.0"></script>
-  <script src="./js/ai-assistant.js?v=8.0"></script>
-  <script src="./js/app.js?v=8.0"></script>
+  <script src="./js/theme.js?v=9.0"></script>
+  <script src="./js/firebase-config.js?v=9.0"></script>
+  <script src="./js/auth.js?v=9.0"></script>
+  <script src="./js/commissions.js?v=9.0"></script>
+  <script src="./js/tasks.js?v=9.0"></script>
+  <script src="./js/task-workspace.js?v=9.0"></script>
+  <script src="./js/protocol.js?v=9.0"></script>
+  <script src="./js/channels.js?v=9.0"></script>
+  <script src="./js/calendar.js?v=9.0"></script>
+  <script src="./js/ai-assistant.js?v=9.0"></script>
+  <script src="./js/app.js?v=9.0"></script>
 
   <!-- Auto-update Service Worker Cache -->
   <script>
