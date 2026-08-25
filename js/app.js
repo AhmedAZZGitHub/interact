@@ -231,6 +231,11 @@ class AppController {
             <button class="btn-secondary compact" style="font-size:0.72rem; padding:3px 8px;" onclick="window.app.switchTab('settings')">Détails ➔</button>
           </div>
         `;
+      } else {
+        pendingBanner.style.display = 'none';
+      }
+    }
+
     // Super Admin Active Browsing Banner
     const browsingBanner = document.getElementById('app-superadmin-browsing-banner');
     if (browsingBanner) {

@@ -166,6 +166,7 @@ class TasksManager {
         deliverableBadge = `<span class="status-tag done" style="font-size:0.68rem;">📎 Livrable Validé</span>`;
       } else if (hasSubmissions) {
         deliverableBadge = `<span class="status-tag inprogress" style="font-size:0.68rem;">⏳ Livrable en Attente</span>`;
+      }
       const isChefOrBoard = window.authManager.canManageAction(task.commissionId);
       let flagReviewBadge = '';
       if (task.flagReview) {
