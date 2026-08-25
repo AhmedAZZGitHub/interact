@@ -989,6 +989,60 @@ class DBStore {
     return false;
   }
 
+  suspendClub(clubId) {
+    if (this.data.clubs?.[clubId]) {
+      this.data.clubs[clubId].info.status = 'suspended';
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
+
+  deleteClub(clubId) {
+    if (this.data.clubs?.[clubId]) {
+      delete this.data.clubs[clubId];
+      if (this.data.activeClubId === clubId) {
+        const remainingClubIds = Object.keys(this.data.clubs || {});
+        this.data.activeClubId = remainingClubIds.length > 0 ? remainingClubIds[0] : null;
+      }
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
+
+  getClubMembersCount(clubId) {
+    const club = this.getClub(clubId);
+    if (!club || !club.members) return 0;
+    return Object.keys(club.members).length;
+  }
+
+  getClubMembersList(clubId) {
+    const club = this.getClub(clubId);
+    if (!club || !club.members) return [];
+    return Object.values(club.members);
+  }
+
+  toggleMemberStatus(userId, clubId, newStatus = 'active') {
+    const club = this.getClub(clubId);
+    if (club && club.members?.[userId]) {
+      club.members[userId].status = newStatus;
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
+
+  deleteMemberFromClub(userId, clubId) {
+    const club = this.getClub(clubId);
+    if (club && club.members?.[userId]) {
+      delete club.members[userId];
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
+
   registerMember(userData) {
     const clubId = userData.clubId || this.data.activeClubId || "club_carthage_01";
     const club = this.getClub(clubId);

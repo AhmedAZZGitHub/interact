@@ -237,8 +237,8 @@
     }
   </style>
 
-  <!-- Master Stylesheet (Cache Busted v9.0) -->
-  <link rel="stylesheet" href="./css/styles.css?v=9.0" />
+  <!-- Master Stylesheet (Cache Busted v10.0) -->
+  <link rel="stylesheet" href="./css/styles.css?v=10.0" />
 
   <!-- Firebase Web SDK (Compat version) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -537,6 +537,12 @@
           <button class="sidebar-nav-btn" data-tab="ai">
             <span>🤖</span>
             <span>Interact Assistant IA</span>
+          </button>
+        </li>
+        <li id="sidebar-item-superadmin" style="display:none;">
+          <button class="sidebar-nav-btn" data-tab="superadmin" style="color:#F7A81B; border:1px solid rgba(247,168,27,0.3); background:rgba(247,168,27,0.08);">
+            <span>🛡️</span>
+            <span>Gestion Super Admin</span>
           </button>
         </li>
         <li>
@@ -855,6 +861,11 @@
         </div>
       </section>
 
+      <!-- ================= TAB 9: GESTION SUPER ADMIN (EXCLUSIVE) ================= -->
+      <section id="view-superadmin" class="view-section">
+        <!-- Dynamically rendered by AppController.renderSuperAdminDashboard() -->
+      </section>
+
     </main>
   </div>
 
@@ -892,6 +903,10 @@
       </span>
       <span class="nav-tab-label">Protocole</span>
     </button>
+    <button class="nav-tab-btn" id="bottom-nav-btn-superadmin" data-tab="superadmin" style="display:none; color:#F7A81B;">
+      <span class="nav-tab-icon">🛡️</span>
+      <span class="nav-tab-label">Super Admin</span>
+    </button>
     <button class="nav-tab-btn" data-tab="settings">
       <span class="nav-tab-icon">⚙️</span>
       <span class="nav-tab-label">Profil</span>
@@ -919,19 +934,19 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- ==========================================================================
-       APPLICATION SCRIPTS (CACHE BUSTED V9.0)
+       APPLICATION SCRIPTS (CACHE BUSTED V10.0)
        ========================================================================== -->
-  <script src="./js/theme.js?v=9.0"></script>
-  <script src="./js/firebase-config.js?v=9.0"></script>
-  <script src="./js/auth.js?v=9.0"></script>
-  <script src="./js/commissions.js?v=9.0"></script>
-  <script src="./js/tasks.js?v=9.0"></script>
-  <script src="./js/task-workspace.js?v=9.0"></script>
-  <script src="./js/protocol.js?v=9.0"></script>
-  <script src="./js/channels.js?v=9.0"></script>
-  <script src="./js/calendar.js?v=9.0"></script>
-  <script src="./js/ai-assistant.js?v=9.0"></script>
-  <script src="./js/app.js?v=9.0"></script>
+  <script src="./js/theme.js?v=10.0"></script>
+  <script src="./js/firebase-config.js?v=10.0"></script>
+  <script src="./js/auth.js?v=10.0"></script>
+  <script src="./js/commissions.js?v=10.0"></script>
+  <script src="./js/tasks.js?v=10.0"></script>
+  <script src="./js/task-workspace.js?v=10.0"></script>
+  <script src="./js/protocol.js?v=10.0"></script>
+  <script src="./js/channels.js?v=10.0"></script>
+  <script src="./js/calendar.js?v=10.0"></script>
+  <script src="./js/ai-assistant.js?v=10.0"></script>
+  <script src="./js/app.js?v=10.0"></script>
 
   <!-- Auto-update Service Worker Cache -->
   <script>

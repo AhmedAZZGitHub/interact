@@ -139,6 +139,7 @@ class AppController {
         if (tabName === 'channels' && window.channelsManager) window.channelsManager.render();
         if (tabName === 'calendar' && window.calendarManager) window.calendarManager.render();
         if (tabName === 'home') this.renderHome();
+        if (tabName === 'superadmin') this.renderSuperAdminDashboard();
       } catch (subErr) {
         console.error(`Error rendering active tab [${tabName}]:`, subErr);
       }
@@ -152,7 +153,7 @@ class AppController {
     const club = window.dbStore.getClub();
 
     const clubNameElem = document.getElementById('header-club-name');
-    if (clubNameElem) clubNameElem.textContent = club.info?.name || 'Interact Club';
+    if (clubNameElem) clubNameElem.textContent = user.isSuperAdmin ? 'Plateforme Super Admin (Tous les Clubs)' : (club.info?.name || 'Interact Club');
 
     const rolePillElem = document.getElementById('header-role-pill');
     if (rolePillElem) {
@@ -194,6 +195,7 @@ class AppController {
 
   updateRoleGatekeeping() {
     const user = window.authManager.getCurrentUser();
+    const isSuperAdmin = window.authManager.isPlatformSuperAdmin();
     const canPostAnn = window.authManager.canPostAnnouncement();
     const newAnnBtn = document.getElementById('btn-new-announcement');
     if (newAnnBtn) newAnnBtn.style.display = canPostAnn ? 'inline-flex' : 'none';
@@ -203,6 +205,12 @@ class AppController {
     const manualSncBtn = document.getElementById('btn-manual-sanction');
     if (scanBtn) scanBtn.style.display = canProt ? 'flex' : 'none';
     if (manualSncBtn) manualSncBtn.style.display = canProt ? 'inline-flex' : 'none';
+
+    // Exclusive Super Admin Navigation Controls
+    const sidebarSuperAdmin = document.getElementById('sidebar-item-superadmin');
+    const bottomNavSuperAdmin = document.getElementById('bottom-nav-btn-superadmin');
+    if (sidebarSuperAdmin) sidebarSuperAdmin.style.display = isSuperAdmin ? 'block' : 'none';
+    if (bottomNavSuperAdmin) bottomNavSuperAdmin.style.display = isSuperAdmin ? 'flex' : 'none';
 
     // Pending Status Alert Banner
     const pendingBanner = document.getElementById('app-pending-status-banner');
@@ -891,15 +899,227 @@ class AppController {
     this.updateRoleGatekeeping();
   }
 
+  /* ================= SUPER ADMIN PLATFORM DASHBOARD & CLUB MANAGEMENT ================= */
+  renderSuperAdminDashboard() {
+    const container = document.getElementById('view-superadmin');
+    if (!container) return;
+
+    if (!window.authManager.isPlatformSuperAdmin()) {
+      container.innerHTML = `
+        <div class="interact-card" style="border:1px solid var(--urgent-red); text-align:center; padding:30px;">
+          <h3 style="color:var(--urgent-red);">🚫 Accès Réservé au Super Admin</h3>
+          <p style="color:var(--text-muted); font-size:0.85rem;">Seul le Super Admin Global de la plateforme (ahmedazzouzi72@gmail.com) peut accéder à cette vue de supervision.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const clubs = window.dbStore ? window.dbStore.getAllClubs() : [];
+    const totalClubs = clubs.length;
+    const activeClubs = clubs.filter(c => c.status === 'active').length;
+    const pendingClubs = clubs.filter(c => c.status === 'pending_superadmin' || c.status === 'pending_validation').length;
+    const suspendedClubs = clubs.filter(c => c.status === 'suspended').length;
+    
+    let totalPlatformUsers = 0;
+    const clubsWithCounts = clubs.map(c => {
+      const count = window.dbStore.getClubMembersCount(c.id);
+      totalPlatformUsers += count;
+      return { ...c, membersCount: count };
+    });
+
+    container.innerHTML = `
+      <!-- Super Admin Hero Banner -->
+      <div class="interact-card gold-border" style="margin-bottom:16px; background:linear-gradient(135deg, rgba(0,51,102,0.6), rgba(10,18,36,0.9));">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:48px; height:48px; border-radius:12px; background:#003366; border:2px solid var(--interact-gold); display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
+              🛡️
+            </div>
+            <div>
+              <h2 style="color:#FFF; font-size:1.25rem; font-weight:800; margin:0;">Supervision Multi-Clubs Plateforme</h2>
+              <p style="color:var(--text-muted); font-size:0.78rem; margin:2px 0 0 0;">Super Admin Global : ahmedazzouzi72@gmail.com</p>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="window.app.openRegistrationModal()" style="font-size:0.8rem; padding:8px 14px;">
+            ➕ Déclarer / Créer un Club
+          </button>
+        </div>
+
+        <!-- Global Platform KPIs -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:16px;">
+          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; text-align:center;">
+            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Total Clubs</span>
+            <div style="font-size:1.5rem; font-weight:800; color:var(--interact-gold);">${totalClubs}</div>
+          </div>
+          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; text-align:center;">
+            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Clubs Actifs</span>
+            <div style="font-size:1.5rem; font-weight:800; color:var(--success-green);">${activeClubs}</div>
+          </div>
+          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; text-align:center;">
+            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">En Attente</span>
+            <div style="font-size:1.5rem; font-weight:800; color:var(--warning-orange);">${pendingClubs}</div>
+          </div>
+          <div style="background:#0E172A; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; text-align:center;">
+            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Total Comptes</span>
+            <div style="font-size:1.5rem; font-weight:800; color:var(--neon-cyan);">${totalPlatformUsers}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clubs Registry List -->
+      <div class="section-header">
+        <span class="section-title">🏛️ Registre des Clubs & Nombre de Comptes</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;" id="superadmin-clubs-list-container">
+        ${clubsWithCounts.map(club => {
+          const isActive = club.status === 'active';
+          const isPending = club.status === 'pending_superadmin' || club.status === 'pending_validation';
+          const isSuspended = club.status === 'suspended';
+
+          return `
+            <div class="interact-card" style="border-color:${isPending ? '#F7A81B' : isSuspended ? '#FF3B30' : 'rgba(255,255,255,0.08)'};">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                    <h3 style="font-size:1.05rem; font-weight:800; color:#FFF; margin:0;">${club.name}</h3>
+                    <span class="header-badge" style="${isActive ? 'background:rgba(52,199,89,0.15); color:var(--success-green); border-color:rgba(52,199,89,0.4);' : isPending ? 'background:rgba(247,168,27,0.15); color:var(--interact-gold); border-color:rgba(247,168,27,0.4);' : 'background:rgba(255,59,48,0.15); color:var(--urgent-red); border-color:rgba(255,59,48,0.4);'}">
+                      ${isActive ? '✓ ACTIF' : isPending ? '⏳ EN ATTENTE' : '🚫 SUSPENDU'}
+                    </span>
+                  </div>
+                  <p style="font-size:0.76rem; color:var(--text-muted); margin:0;">
+                    District : <strong>${club.district || 'District 9010'}</strong> • Parrain : <strong>${club.sponsorRotaryClub || 'Rotary International'}</strong>
+                  </p>
+                  <p style="font-size:0.76rem; color:var(--interact-gold); margin:2px 0 0 0;">
+                    👑 Président : ${club.presidentName || 'Non assigné'} (${club.presidentEmail || 'N/A'})
+                  </p>
+                </div>
+
+                <div style="background:#0B1220; border:1px solid rgba(0,240,255,0.3); border-radius:10px; padding:6px 14px; text-align:center;">
+                  <span style="font-size:1.15rem; font-weight:800; color:var(--neon-cyan); display:block;">${club.membersCount}</span>
+                  <span style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase;">Comptes</span>
+                </div>
+              </div>
+
+              <!-- Super Admin Action Bar -->
+              <div style="display:flex; gap:8px; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; flex-wrap:wrap;">
+                <button class="btn-secondary compact" style="color:var(--accent-cyan); border-color:rgba(0,240,255,0.4);" onclick="window.app.openSuperAdminClubMembersModal('${club.id}')">
+                  👥 Gérer Comptes (${club.membersCount})
+                </button>
+
+                ${isPending || isSuspended ? `
+                  <button class="btn-primary compact" style="background:linear-gradient(135deg, #34C759, #28A745);" onclick="window.app.handleSuperAdminApproveClub('${club.id}')">
+                    ✓ Activer le Club
+                  </button>
+                ` : `
+                  <button class="btn-secondary compact" style="color:#FF9500; border-color:#FF9500;" onclick="window.app.handleSuperAdminSuspendClub('${club.id}')">
+                    ⏸️ Suspendre
+                  </button>
+                `}
+
+                <button class="btn-secondary compact" style="color:#FF3B30; border-color:rgba(255,59,48,0.4);" onclick="window.app.handleSuperAdminDeleteClub('${club.id}', '${club.name}')">
+                  🗑️ Supprimer
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
   handleSuperAdminApproveClub(clubId) {
     window.dbStore.approveClub(clubId);
     this.showToast('Club activé sur la plateforme avec succès ! 👑', 'success');
+    this.renderSuperAdminDashboard();
     this.renderSettings();
+  }
+
+  handleSuperAdminSuspendClub(clubId) {
+    window.dbStore.suspendClub(clubId);
+    this.showToast('Club suspendu temporairement. ⏸️', 'warning');
+    this.renderSuperAdminDashboard();
+  }
+
+  handleSuperAdminDeleteClub(clubId, clubName = 'ce club') {
+    if (confirm(`Êtes-vous certain de vouloir SUPPRIMER DÉFINITIVEMENT le club "${clubName}" ainsi que l'ensemble de ses comptes membres ?`)) {
+      window.dbStore.deleteClub(clubId);
+      this.showToast(`Club "${clubName}" supprimé avec succès.`, 'error');
+      this.renderSuperAdminDashboard();
+      this.renderSettings();
+    }
+  }
+
+  openSuperAdminClubMembersModal(clubId) {
+    const club = window.dbStore.getClub(clubId);
+    const members = window.dbStore.getClubMembersList(clubId);
+
+    const modalBody = `
+      <div style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08);">
+        <h4 style="margin:0; color:#FFF; font-size:0.95rem;">Comptes Membres : ${club.info?.name || 'Club'}</h4>
+        <span style="font-size:0.75rem; color:var(--text-muted);">${members.length} compte(s) enregistré(s)</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto;">
+        ${members.length === 0 ? `
+          <p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">Aucun membre enregistré dans ce club.</p>
+        ` : members.map(m => `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#0B1220; padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+            <div>
+              <div style="font-weight:700; color:#FFF; font-size:0.88rem;">
+                ${m.displayName}
+                <span class="header-badge" style="font-size:0.68rem; margin-left:6px; background:rgba(247,168,27,0.1); color:var(--interact-gold); border-color:rgba(247,168,27,0.3);">
+                  ${window.ROLE_LABELS[m.role] || m.role}
+                </span>
+              </div>
+              <div style="font-size:0.74rem; color:var(--text-muted); margin-top:2px;">
+                ${m.email} ${m.phoneNumber ? `• 📞 ${m.phoneNumber}` : ''} • Statut : <strong style="color:${m.status === 'active' ? '#34C759' : '#FF9500'}">${m.status || 'active'}</strong>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:6px;">
+              ${m.status === 'active' ? `
+                <button class="btn-secondary compact" style="font-size:0.72rem; color:#FF9500; border-color:#FF9500;" onclick="window.app.handleSuperAdminToggleUserStatus('${m.id}', '${clubId}', 'suspended')">
+                  Suspendre
+                </button>
+              ` : `
+                <button class="btn-primary compact" style="font-size:0.72rem; background:linear-gradient(135deg, #34C759, #28A745);" onclick="window.app.handleSuperAdminToggleUserStatus('${m.id}', '${clubId}', 'active')">
+                  Activer
+                </button>
+              `}
+
+              <button class="btn-secondary compact" style="font-size:0.72rem; color:#FF3B30; border-color:rgba(255,59,48,0.4);" onclick="window.app.handleSuperAdminDeleteUser('${m.id}', '${clubId}', '${m.displayName}')">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    this.openModal(`👥 Gestion des Comptes — ${club.info?.name || 'Club'}`, modalBody);
+  }
+
+  handleSuperAdminToggleUserStatus(userId, clubId, newStatus) {
+    window.dbStore.toggleMemberStatus(userId, clubId, newStatus);
+    this.showToast(`Statut du compte mis à jour (${newStatus}) !`, 'success');
+    this.openSuperAdminClubMembersModal(clubId);
+    this.renderSuperAdminDashboard();
+  }
+
+  handleSuperAdminDeleteUser(userId, clubId, userName = 'ce membre') {
+    if (confirm(`Supprimer définitivement le compte de ${userName} ?`)) {
+      window.dbStore.deleteMemberFromClub(userId, clubId);
+      this.showToast(`Compte de ${userName} supprimé.`, 'error');
+      this.openSuperAdminClubMembersModal(clubId);
+      this.renderSuperAdminDashboard();
+    }
   }
 
   handleSuperAdminRejectClub(clubId) {
     window.dbStore.rejectClub(clubId);
     this.showToast('Création de club rejetée.', 'error');
+    this.renderSuperAdminDashboard();
     this.renderSettings();
   }
 

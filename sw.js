@@ -1,4 +1,4 @@
-const CACHE_NAME = 'interact-pwa-v9.0.0';
+const CACHE_NAME = 'interact-pwa-v10.0.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
