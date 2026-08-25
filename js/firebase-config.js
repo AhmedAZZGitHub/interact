@@ -885,6 +885,16 @@ class DBStore {
     return null;
   }
 
+  setActiveClub(clubId) {
+    if (this.data.clubs?.[clubId]) {
+      this.data.activeClubId = clubId;
+      this.saveData(this.data);
+      this.notify();
+      return true;
+    }
+    return false;
+  }
+
   /* ================= MULTI-TENANT & APPROVAL WORKFLOW ================= */
   getAllClubs() {
     return Object.values(this.data.clubs || {}).map(c => ({

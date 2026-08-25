@@ -231,8 +231,23 @@ class AppController {
             <button class="btn-secondary compact" style="font-size:0.72rem; padding:3px 8px;" onclick="window.app.switchTab('settings')">Détails ➔</button>
           </div>
         `;
+    // Super Admin Active Browsing Banner
+    const browsingBanner = document.getElementById('app-superadmin-browsing-banner');
+    if (browsingBanner) {
+      if (isSuperAdmin && this.activeSuperAdminBrowsingClub) {
+        browsingBanner.style.display = 'block';
+        browsingBanner.innerHTML = `
+          <div style="background:rgba(247,168,27,0.15); border:1px solid #F7A81B; padding:10px 16px; border-radius:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:0.82rem; color:#F7A81B; font-weight:700;">
+              🛡️ Mode Super Admin : Navigation dans l'espace de <strong>« ${this.activeSuperAdminBrowsingClub.name} »</strong>
+            </span>
+            <button class="btn-primary compact" style="font-size:0.74rem; background:linear-gradient(135deg, #003366, #001F3F); border:1px solid #F7A81B; color:#F7A81B;" onclick="window.app.switchTab('superadmin')">
+              🔙 Revenir au Contrôle Super Admin
+            </button>
+          </div>
+        `;
       } else {
-        pendingBanner.style.display = 'none';
+        browsingBanner.style.display = 'none';
       }
     }
   }
@@ -1003,6 +1018,10 @@ class AppController {
 
               <!-- Super Admin Action Bar -->
               <div style="display:flex; gap:8px; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; flex-wrap:wrap;">
+                <button class="btn-primary compact" style="background:linear-gradient(135deg, #003366, #001F3F); border:1px solid var(--interact-gold); color:var(--interact-gold); font-weight:800;" onclick="window.app.handleSuperAdminEnterClub('${club.id}')">
+                  🚀 Entrer dans ce Club ➔
+                </button>
+
                 <button class="btn-secondary compact" style="color:var(--accent-cyan); border-color:rgba(0,240,255,0.4);" onclick="window.app.openSuperAdminClubMembersModal('${club.id}')">
                   👥 Gérer Comptes (${club.membersCount})
                 </button>
@@ -1026,6 +1045,20 @@ class AppController {
         }).join('')}
       </div>
     `;
+  }
+
+  handleSuperAdminEnterClub(clubId) {
+    const club = window.dbStore.getClub(clubId);
+    if (!club) return;
+
+    window.dbStore.setActiveClub(clubId);
+    this.activeSuperAdminBrowsingClub = club.info;
+    this.showToast(`Mode Super Admin : Accès à "${club.info.name}" activé ! 🚀`, 'success');
+    this.switchTab('home');
+    this.renderHome();
+    this.renderSettings();
+    this.updateHeaderUI();
+    this.updateRoleGatekeeping();
   }
 
   handleSuperAdminApproveClub(clubId) {

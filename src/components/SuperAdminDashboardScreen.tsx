@@ -4,6 +4,7 @@ import { Club, User } from '../types';
 interface SuperAdminDashboardScreenProps {
   currentUser: User;
   clubs: (Club & { membersCount?: number; membersList?: User[] })[];
+  onEnterClub?: (clubId: string) => void;
   onApproveClub: (clubId: string) => void;
   onSuspendClub: (clubId: string) => void;
   onActivateClub: (clubId: string) => void;
@@ -15,6 +16,7 @@ interface SuperAdminDashboardScreenProps {
 export const SuperAdminDashboardScreen: React.FC<SuperAdminDashboardScreenProps> = ({
   currentUser,
   clubs,
+  onEnterClub,
   onApproveClub,
   onSuspendClub,
   onActivateClub,
@@ -202,6 +204,16 @@ export const SuperAdminDashboardScreen: React.FC<SuperAdminDashboardScreenProps>
 
                 {/* Card Action Buttons for Super Admin */}
                 <div style={styles.clubCardActions}>
+                  {/* Enter/Browse Club Workspace */}
+                  <button
+                    style={styles.btnEnterClub}
+                    onClick={() => {
+                      if (onEnterClub) onEnterClub(club.id);
+                    }}
+                  >
+                    🚀 Entrer dans ce Club ➔
+                  </button>
+
                   {/* View Members List Button */}
                   <button
                     style={styles.btnViewMembers}
@@ -491,6 +503,16 @@ const styles: Record<string, React.CSSProperties> = {
     borderTop: '1px solid rgba(255, 255, 255, 0.06)',
     paddingTop: '14px',
     flexWrap: 'wrap'
+  },
+  btnEnterClub: {
+    background: 'linear-gradient(135deg, #003366, #001F3F)',
+    border: '1px solid #F7A81B',
+    color: '#F7A81B',
+    padding: '7px 14px',
+    borderRadius: '8px',
+    fontSize: '0.8rem',
+    fontWeight: 800,
+    cursor: 'pointer'
   },
   btnViewMembers: {
     backgroundColor: '#003366',
