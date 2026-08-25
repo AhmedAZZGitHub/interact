@@ -15,13 +15,102 @@
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
   <link rel="apple-touch-icon" href="./icons/icon.svg" />
 
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- Stylesheet (Cache Busted) -->
-  <link rel="stylesheet" href="./css/styles.css?v=3.2" />
+  <!-- Critical Immediate Stylesheet -->
+  <style>
+    .tasks-filter-bar {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      gap: 8px !important;
+      overflow-x: auto !important;
+      padding-bottom: 10px !important;
+      margin-bottom: 16px !important;
+      scrollbar-width: none !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+    .tasks-filter-bar::-webkit-scrollbar { display: none !important; }
+    .filter-chip {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 8px 18px !important;
+      background: #131B2E !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      border-radius: 100px !important;
+      color: #94A3B8 !important;
+      font-size: 0.82rem !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      white-space: nowrap !important;
+      transition: all 0.2s ease !important;
+      flex-shrink: 0 !important;
+    }
+    .filter-chip.active {
+      background: #003366 !important;
+      color: #FFFFFF !important;
+      border-color: #F7A81B !important;
+      box-shadow: 0 0 12px rgba(247, 168, 27, 0.35) !important;
+    }
+    .interact-card, .glass-card, .commission-main-card, .commission-card, .task-card, .sanction-card, .hr-member-card, .feed-item {
+      background: #131B2E !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 14px !important;
+      padding: 16px 20px !important;
+      margin-bottom: 14px !important;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5) !important;
+      position: relative !important;
+    }
+    .interact-subcard, .action-card, .action-subcard {
+      background: #0B1220 !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 12px !important;
+      padding: 14px 16px !important;
+      margin-top: 10px !important;
+    }
+    .task-card-inner {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 14px !important;
+    }
+    .task-custom-checkbox {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      width: 22px !important;
+      height: 22px !important;
+      border-radius: 6px !important;
+      border: 2px solid #64748B !important;
+      background: transparent !important;
+      cursor: pointer !important;
+      margin-top: 2px !important;
+      flex-shrink: 0 !important;
+      display: grid !important;
+      place-content: center !important;
+    }
+    .task-custom-checkbox:checked {
+      background: #34C759 !important;
+      border-color: #34C759 !important;
+    }
+    .task-custom-checkbox:checked::after {
+      content: "✓" !important;
+      color: #FFFFFF !important;
+      font-weight: 800 !important;
+      font-size: 13px !important;
+    }
+  </style>
+
+  <!-- Master Stylesheet (Cache Busted v4.0) -->
+  <link rel="stylesheet" href="./css/styles.css?v=4.0" />
 
   <!-- Firebase Web SDK (Compat version) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -488,19 +577,30 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- ==========================================================================
-       APPLICATION SCRIPTS (CACHE BUSTED)
+       APPLICATION SCRIPTS (CACHE BUSTED V4.0)
        ========================================================================== -->
-  <script src="./js/theme.js?v=3.2"></script>
-  <script src="./js/firebase-config.js?v=3.2"></script>
-  <script src="./js/auth.js?v=3.2"></script>
-  <script src="./js/commissions.js?v=3.2"></script>
-  <script src="./js/tasks.js?v=3.2"></script>
-  <script src="./js/task-workspace.js?v=3.2"></script>
-  <script src="./js/protocol.js?v=3.2"></script>
-  <script src="./js/channels.js?v=3.2"></script>
-  <script src="./js/calendar.js?v=3.2"></script>
-  <script src="./js/ai-assistant.js?v=3.2"></script>
-  <script src="./js/app.js?v=3.2"></script>
+  <script src="./js/theme.js?v=4.0"></script>
+  <script src="./js/firebase-config.js?v=4.0"></script>
+  <script src="./js/auth.js?v=4.0"></script>
+  <script src="./js/commissions.js?v=4.0"></script>
+  <script src="./js/tasks.js?v=4.0"></script>
+  <script src="./js/task-workspace.js?v=4.0"></script>
+  <script src="./js/protocol.js?v=4.0"></script>
+  <script src="./js/channels.js?v=4.0"></script>
+  <script src="./js/calendar.js?v=4.0"></script>
+  <script src="./js/ai-assistant.js?v=4.0"></script>
+  <script src="./js/app.js?v=4.0"></script>
+
+  <!-- Auto-update Service Worker Cache -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.update();
+        }
+      });
+    }
+  </script>
 
 </body>
 </html>

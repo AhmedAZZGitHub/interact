@@ -1,7 +1,7 @@
 /* ==========================================================================
-   INTERACT CLUB PLATFORM - MASTER STYLESHEET (V3.2)
+   INTERACT CLUB PLATFORM - COMPLETE MASTER STYLESHEET (V4.0)
    Aesthetics: Modern Dark Obsidian Glassmorphism & Light Rotary Theme
-   Solid Cards: .interact-card, .commission-card, .action-card, .task-card
+   Full coverage for all Views, Cards, Badges, Tables, Filters & Modals
    ========================================================================== */
 
 :root {
@@ -27,10 +27,10 @@
   /* Default Dark Mode Surfaces */
   --bg-main: #070D1A;
   --bg-sidebar: #050912;
-  --bg-card: #111B30;
-  --bg-card-hover: #16233E;
-  --bg-subcard: #0A1222;
-  --bg-glass: rgba(10, 18, 36, 0.92);
+  --bg-card: #131B2E;
+  --bg-card-hover: #19243C;
+  --bg-subcard: #0B1220;
+  --bg-glass: rgba(10, 18, 36, 0.94);
   --bg-input: #0E172A;
   --border-subtle: rgba(255, 255, 255, 0.1);
   --border-accent: rgba(247, 168, 27, 0.35);
@@ -51,8 +51,8 @@
   --bottom-bar-height: 72px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.06);
-  --shadow-hover: 0 14px 35px -5px rgba(0, 51, 102, 0.6), 0 0 15px rgba(0, 240, 255, 0.15);
+  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.06);
+  --shadow-hover: 0 14px 35px -5px rgba(0, 51, 102, 0.6), 0 0 15px rgba(0, 240, 255, 0.18);
   --shadow-gold: 0 8px 24px -4px var(--gold-glow);
   --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -65,7 +65,7 @@ body.light-theme {
   --bg-card: #FFFFFF;
   --bg-card-hover: #F8FAFC;
   --bg-subcard: #F1F5F9;
-  --bg-glass: rgba(255, 255, 255, 0.94);
+  --bg-glass: rgba(255, 255, 255, 0.95);
   --bg-input: #E2E8F0;
   --border-subtle: #CBD5E1;
   --border-accent: rgba(247, 168, 27, 0.5);
@@ -113,26 +113,26 @@ body.light-theme {
 }
 
 /* ==========================================================================
-   GLASSMORPHISM CARD CONTAINERS (.interact-card, .commission-card, etc.)
+   SOLID GLASSMORPHIC CARDS (.interact-card, .glass-card, etc.)
    ========================================================================== */
 .interact-card,
 .glass-card,
-.commission-card,
 .commission-main-card,
-.sanction-card,
-.sanction-item,
+.commission-card,
 .task-card,
 .task-item,
+.sanction-card,
+.sanction-item,
 .hr-member-card,
 .member-row,
 .feed-item {
   background: var(--bg-card) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid var(--border-subtle) !important;
   border-radius: var(--radius-md) !important;
-  padding: 18px 20px !important;
-  margin-bottom: 16px !important;
+  padding: 16px 20px !important;
+  margin-bottom: 14px !important;
   box-shadow: var(--shadow-card) !important;
   position: relative;
   overflow: hidden;
@@ -140,6 +140,7 @@ body.light-theme {
 }
 
 .interact-card:hover,
+.commission-main-card:hover,
 .commission-card:hover,
 .task-card:hover,
 .sanction-card:hover,
@@ -148,14 +149,18 @@ body.light-theme {
   box-shadow: var(--shadow-hover) !important;
 }
 
+.interact-card.gold-border {
+  border-color: var(--border-accent) !important;
+}
+
 .interact-subcard,
 .action-card,
 .action-subcard {
   background: var(--bg-subcard) !important;
   border: 1px solid var(--border-subtle) !important;
   border-radius: var(--radius-sm) !important;
-  padding: 16px 18px !important;
-  margin-top: 12px !important;
+  padding: 14px 16px !important;
+  margin-top: 10px !important;
   transition: border-color var(--transition-fast);
 }
 
@@ -172,7 +177,7 @@ body.light-theme {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 100px;
   font-size: 0.72rem;
   font-weight: 700;
@@ -188,7 +193,7 @@ body.light-theme {
 }
 
 .status-tag.inprogress, .status-tag.badge-normal, .deadline-badge.badge-normal {
-  background: rgba(0, 240, 255, 0.15) !important;
+  background: rgba(0, 240, 255, 0.14) !important;
   color: var(--neon-cyan) !important;
   border: 1px solid var(--border-cyan) !important;
 }
@@ -235,7 +240,7 @@ body.light-theme .meta-pill {
 }
 
 /* ==========================================================================
-   APP HEADER
+   APP HEADER & LAYOUT
    ========================================================================== */
 .app-header {
   position: sticky;
@@ -360,9 +365,7 @@ body.light-theme .role-pill {
   cursor: pointer;
 }
 
-/* ==========================================================================
-   MULTI-PLATFORM RESPONSIVE LAYOUT (DESKTOP SIDEBAR & MAIN VIEWPORT)
-   ========================================================================== */
+/* Desktop Sidebar */
 .app-layout-container {
   display: flex;
   width: 100%;
@@ -476,6 +479,112 @@ body.light-theme .sidebar-nav-btn:hover {
 body.light-theme .btn-link {
   color: #0066CC;
 }
+
+/* ==========================================================================
+   VUE 1 : ACCUEIL & BUREAU
+   ========================================================================== */
+.club-hero-card {
+  background: linear-gradient(135deg, rgba(0, 51, 102, 0.9), rgba(6, 18, 38, 0.95)) !important;
+  border: 1px solid var(--border-accent) !important;
+  padding: 22px !important;
+  color: #FFFFFF;
+}
+
+.hero-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.hero-badge-rotary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--interact-gold);
+  background: rgba(247, 168, 27, 0.15);
+  border: 1px solid rgba(247, 168, 27, 0.3);
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+
+.club-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.club-subtitle {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.hero-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.stat-box { text-align: center; }
+.stat-number { font-size: 1.35rem; font-weight: 800; line-height: 1; }
+.stat-number.gold { color: var(--interact-gold); }
+.stat-number.cyan { color: var(--neon-cyan); }
+.stat-number.red  { color: var(--urgent-red); }
+.stat-label { font-size: 0.7rem; font-weight: 600; color: rgba(255, 255, 255, 0.7); text-transform: uppercase; margin-top: 4px; }
+
+.bureau-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.bureau-chip {
+  flex: 0 0 125px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bureau-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-navy), #1e293b);
+  border: 2px solid var(--interact-gold);
+  color: #FFFFFF;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
+
+.bureau-name { font-size: 0.82rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.bureau-role { font-size: 0.68rem; color: var(--interact-gold); font-weight: 600; margin-top: 2px; }
+
+.feed-list { display: flex; flex-direction: column; gap: 12px; }
+.feed-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.feed-category { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); color: var(--text-muted); }
+.feed-category.statutaire { background: rgba(0, 240, 255, 0.15); color: var(--neon-cyan); }
+.feed-category.urgent { background: rgba(255, 59, 48, 0.2); color: var(--urgent-red); }
+.feed-title { font-size: 0.96rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+.feed-content { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; white-space: pre-line; }
 
 /* ==========================================================================
    VUE 2 : COMMISSIONS & ACTIONS CARDS (.view-commissions)
@@ -700,39 +809,51 @@ body.light-theme .progress-bar-bg {
 }
 
 /* ==========================================================================
-   VUE 3 : TÂCHES & LIVRABLES (.view-tasks)
+   VUE 3 : TÂCHES & FILTRES HORIZONTAUX (.view-tasks)
    ========================================================================== */
 .tasks-filter-bar {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  margin-bottom: 14px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 16px !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .tasks-filter-bar::-webkit-scrollbar {
-  display: none;
+  display: none !important;
 }
 
 .filter-chip {
-  padding: 8px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 100px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 8px 18px !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 100px !important;
+  color: var(--text-muted) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.filter-chip:hover {
+  border-color: rgba(247, 168, 27, 0.4) !important;
+  color: var(--text-main) !important;
 }
 
 .filter-chip.active {
-  background: var(--primary-navy);
-  color: #FFFFFF;
-  border-color: var(--interact-gold);
-  box-shadow: 0 0 12px rgba(247, 168, 27, 0.25);
+  background: var(--primary-navy) !important;
+  color: #FFFFFF !important;
+  border-color: var(--interact-gold) !important;
+  box-shadow: 0 0 12px rgba(247, 168, 27, 0.35) !important;
 }
 
 .task-card,
@@ -843,7 +964,7 @@ body.light-theme .task-open-btn {
 }
 
 /* ==========================================================================
-   VUE 4 : PROTOCOLE & TABLEAU RH (.view-protocol)
+   VUE 4 : PROTOCOLE & MATRICE RH (.view-protocol)
    ========================================================================== */
 .sanction-card,
 .sanction-item {
