@@ -237,8 +237,8 @@
     }
   </style>
 
-  <!-- Master Stylesheet (Cache Busted v12.0) -->
-  <link rel="stylesheet" href="./css/styles.css?v=12.0" />
+  <!-- Master Stylesheet (Cache Busted v13.0) -->
+  <link rel="stylesheet" href="./css/styles.css?v=13.0" />
 
   <!-- Firebase Web SDK (Compat version) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -497,43 +497,43 @@
       </div>
 
       <ul class="sidebar-nav-list">
-        <li>
+        <li class="club-nav-item">
           <button class="sidebar-nav-btn active" data-tab="home">
             <span>🏠</span>
             <span>Accueil & Bureau</span>
           </button>
         </li>
-        <li>
+        <li class="club-nav-item">
           <button class="sidebar-nav-btn" data-tab="channels">
             <span>💬</span>
             <span>Canaux & Meet</span>
           </button>
         </li>
-        <li>
+        <li class="club-nav-item">
           <button class="sidebar-nav-btn" data-tab="commissions">
             <span>👥</span>
             <span>Commissions & Actions</span>
           </button>
         </li>
-        <li>
+        <li class="club-nav-item">
           <button class="sidebar-nav-btn" data-tab="tasks">
             <span>📋</span>
             <span>Mes Tâches & Livrables</span>
           </button>
         </li>
-        <li>
+        <li class="club-nav-item">
           <button class="sidebar-nav-btn" data-tab="calendar">
             <span>📅</span>
             <span>Planning & Calendrier</span>
           </button>
         </li>
-        <li>
+        <li class="club-nav-item">
           <button class="sidebar-nav-btn" data-tab="protocol">
             <span>⚖️</span>
             <span>Protocole & RH</span>
           </button>
         </li>
-        <li>
+        <li class="club-nav-item">
           <button class="sidebar-nav-btn" data-tab="ai">
             <span>🤖</span>
             <span>Interact Assistant IA</span>
@@ -542,7 +542,7 @@
         <li id="sidebar-item-superadmin" style="display:none;">
           <button class="sidebar-nav-btn" data-tab="superadmin" style="color:#F7A81B; border:1px solid rgba(247,168,27,0.3); background:rgba(247,168,27,0.08);">
             <span>🛡️</span>
-            <span>Gestion Super Admin</span>
+            <span>Portail des Clubs (Super Admin)</span>
           </button>
         </li>
         <li>
@@ -876,30 +876,30 @@
        BOTTOM TAB NAVIGATION BAR (MOBILE PWA)
        ========================================================================== -->
   <nav class="bottom-nav-bar">
-    <button class="nav-tab-btn active" data-tab="home">
+    <button class="nav-tab-btn club-nav-item active" data-tab="home">
       <span class="nav-tab-icon">🏠</span>
       <span class="nav-tab-label">Accueil</span>
     </button>
-    <button class="nav-tab-btn" data-tab="channels">
+    <button class="nav-tab-btn club-nav-item" data-tab="channels">
       <span class="nav-tab-icon">💬</span>
       <span class="nav-tab-label">Canaux</span>
     </button>
-    <button class="nav-tab-btn" data-tab="commissions">
+    <button class="nav-tab-btn club-nav-item" data-tab="commissions">
       <span class="nav-tab-icon">👥</span>
       <span class="nav-tab-label">Commissions</span>
     </button>
-    <button class="nav-tab-btn" data-tab="tasks">
+    <button class="nav-tab-btn club-nav-item" data-tab="tasks">
       <span class="nav-tab-icon">
         📋
         <span class="nav-tab-badge" id="tasks-nav-badge" style="display:none;">0</span>
       </span>
       <span class="nav-tab-label">Tâches</span>
     </button>
-    <button class="nav-tab-btn" data-tab="calendar">
+    <button class="nav-tab-btn club-nav-item" data-tab="calendar">
       <span class="nav-tab-icon">📅</span>
       <span class="nav-tab-label">Planning</span>
     </button>
-    <button class="nav-tab-btn" data-tab="protocol">
+    <button class="nav-tab-btn club-nav-item" data-tab="protocol">
       <span class="nav-tab-icon">
         ⚖️
         <span class="nav-tab-badge" id="protocol-nav-badge" style="display:none;">0</span>
@@ -908,7 +908,7 @@
     </button>
     <button class="nav-tab-btn" id="bottom-nav-btn-superadmin" data-tab="superadmin" style="display:none; color:#F7A81B;">
       <span class="nav-tab-icon">🛡️</span>
-      <span class="nav-tab-label">Super Admin</span>
+      <span class="nav-tab-label">Portail Clubs</span>
     </button>
     <button class="nav-tab-btn" data-tab="settings">
       <span class="nav-tab-icon">⚙️</span>
@@ -937,19 +937,19 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- ==========================================================================
-       APPLICATION SCRIPTS (CACHE BUSTED V12.0)
+       APPLICATION SCRIPTS (CACHE BUSTED V13.0)
        ========================================================================== -->
-  <script src="./js/theme.js?v=12.0"></script>
-  <script src="./js/firebase-config.js?v=12.0"></script>
-  <script src="./js/auth.js?v=12.0"></script>
-  <script src="./js/commissions.js?v=12.0"></script>
-  <script src="./js/tasks.js?v=12.0"></script>
-  <script src="./js/task-workspace.js?v=12.0"></script>
-  <script src="./js/protocol.js?v=12.0"></script>
-  <script src="./js/channels.js?v=12.0"></script>
-  <script src="./js/calendar.js?v=12.0"></script>
-  <script src="./js/ai-assistant.js?v=12.0"></script>
-  <script src="./js/app.js?v=12.0"></script>
+  <script src="./js/theme.js?v=13.0"></script>
+  <script src="./js/firebase-config.js?v=13.0"></script>
+  <script src="./js/auth.js?v=13.0"></script>
+  <script src="./js/commissions.js?v=13.0"></script>
+  <script src="./js/tasks.js?v=13.0"></script>
+  <script src="./js/task-workspace.js?v=13.0"></script>
+  <script src="./js/protocol.js?v=13.0"></script>
+  <script src="./js/channels.js?v=13.0"></script>
+  <script src="./js/calendar.js?v=13.0"></script>
+  <script src="./js/ai-assistant.js?v=13.0"></script>
+  <script src="./js/app.js?v=13.0"></script>
 
   <!-- Auto-update Service Worker Cache -->
   <script>

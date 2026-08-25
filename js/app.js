@@ -84,6 +84,9 @@ class AppController {
         this.showAuthScreen();
       } else {
         this.hideAuthScreen();
+        if (window.authManager && window.authManager.isPlatformSuperAdmin()) {
+          this.switchTab('superadmin');
+        }
       }
     } catch (e) { console.error(e); }
   }
@@ -196,6 +199,13 @@ class AppController {
   updateRoleGatekeeping() {
     const user = window.authManager.getCurrentUser();
     const isSuperAdmin = window.authManager.isPlatformSuperAdmin();
+    const isBrowsingClub = isSuperAdmin && !!this.activeSuperAdminBrowsingClub;
+
+    // Club-specific navigation items are strictly hidden for Super Admin unless actively browsing a club
+    document.querySelectorAll('.club-nav-item').forEach(el => {
+      el.style.display = (!isSuperAdmin || isBrowsingClub) ? '' : 'none';
+    });
+
     const canPostAnn = window.authManager.canPostAnnouncement();
     const newAnnBtn = document.getElementById('btn-new-announcement');
     if (newAnnBtn) newAnnBtn.style.display = canPostAnn ? 'inline-flex' : 'none';
@@ -246,7 +256,7 @@ class AppController {
             <span style="font-size:0.82rem; color:#F7A81B; font-weight:700;">
               🛡️ Mode Super Admin : Navigation dans l'espace de <strong>« ${this.activeSuperAdminBrowsingClub.name} »</strong>
             </span>
-            <button class="btn-primary compact" style="font-size:0.74rem; background:linear-gradient(135deg, #003366, #001F3F); border:1px solid #F7A81B; color:#F7A81B;" onclick="window.app.switchTab('superadmin')">
+            <button class="btn-primary compact" style="font-size:0.74rem; background:linear-gradient(135deg, #003366, #001F3F); border:1px solid #F7A81B; color:#F7A81B;" onclick="window.app.handleSuperAdminExitInspection()">
               🔙 Revenir au Contrôle Super Admin
             </button>
           </div>
@@ -528,10 +538,17 @@ class AppController {
     if (res.success) {
       this.hideAuthScreen();
       this.showToast(`Connexion réussie : Bienvenue ${res.user.displayName} ! 👑`, 'success');
-      this.renderHome();
-      this.renderSettings();
       this.updateHeaderUI();
       this.updateRoleGatekeeping();
+      if (window.authManager.isPlatformSuperAdmin()) {
+        this.activeSuperAdminBrowsingClub = null;
+        this.switchTab('superadmin');
+        this.renderSuperAdminDashboard();
+      } else {
+        this.switchTab('home');
+        this.renderHome();
+      }
+      this.renderSettings();
     } else {
       this.showToast(res.message || 'Échec de connexion.', 'error');
     }
@@ -1061,6 +1078,16 @@ class AppController {
     this.showToast(`Mode Super Admin : Accès à "${club.info.name}" activé ! 🚀`, 'success');
     this.switchTab('home');
     this.renderHome();
+    this.renderSettings();
+    this.updateHeaderUI();
+    this.updateRoleGatekeeping();
+  }
+
+  handleSuperAdminExitInspection() {
+    this.activeSuperAdminBrowsingClub = null;
+    this.showToast('Retour au Portail Super Admin Plateforme. 🛡️', 'info');
+    this.switchTab('superadmin');
+    this.renderSuperAdminDashboard();
     this.renderSettings();
     this.updateHeaderUI();
     this.updateRoleGatekeeping();
