@@ -26,6 +26,7 @@
 
   <!-- Critical Immediate Stylesheet -->
   <style>
+    /* Tasks Filter Bar */
     .tasks-filter-bar {
       display: flex !important;
       flex-direction: row !important;
@@ -60,7 +61,12 @@
       border-color: #F7A81B !important;
       box-shadow: 0 0 12px rgba(247, 168, 27, 0.35) !important;
     }
-    .interact-card, .glass-card, .commission-main-card, .commission-card, .task-card, .sanction-card, .hr-member-card, .feed-item {
+
+    /* All Cards */
+    .interact-card, .glass-card, .commission-main-card, .commission-card, 
+    .task-card, .task-item, .sanction-card, .sanction-item, 
+    .hr-member-card, .member-row, .feed-item {
+      display: block !important;
       background: #131B2E !important;
       backdrop-filter: blur(12px) !important;
       -webkit-backdrop-filter: blur(12px) !important;
@@ -78,12 +84,14 @@
       padding: 14px 16px !important;
       margin-top: 10px !important;
     }
+
+    /* Tasks Checklist */
     .task-card-inner {
       display: flex !important;
       align-items: flex-start !important;
       gap: 14px !important;
     }
-    .task-custom-checkbox {
+    .task-custom-checkbox, .task-checkbox {
       appearance: none !important;
       -webkit-appearance: none !important;
       width: 22px !important;
@@ -97,20 +105,139 @@
       display: grid !important;
       place-content: center !important;
     }
-    .task-custom-checkbox:checked {
+    .task-custom-checkbox:checked, .task-checkbox:checked {
       background: #34C759 !important;
       border-color: #34C759 !important;
     }
-    .task-custom-checkbox:checked::after {
+    .task-custom-checkbox:checked::after, .task-checkbox:checked::after {
       content: "✓" !important;
       color: #FFFFFF !important;
       font-weight: 800 !important;
       font-size: 13px !important;
     }
+
+    /* Sanctions Cards */
+    .sanctions-list {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+    .sanction-item, .sanction-card {
+      border-left: 4px solid #FF9500 !important;
+    }
+    .sanction-item.severe, .sanction-card.severe {
+      border-left: 4px solid #FF3B30 !important;
+      background: linear-gradient(135deg, rgba(255, 59, 48, 0.08), #131B2E) !important;
+    }
+    .sanction-item.excused, .sanction-card.excused {
+      border-left: 4px solid #34C759 !important;
+      opacity: 0.7 !important;
+    }
+    .sanction-top, .sanction-card-topbar {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      margin-bottom: 8px !important;
+    }
+    .sanction-member, .sanction-member-name {
+      font-size: 0.95rem !important;
+      font-weight: 700 !important;
+      color: #F8FAFC !important;
+    }
+    .sanction-grade-badge, .status-tag {
+      display: inline-flex !important;
+      align-items: center !important;
+      padding: 3px 9px !important;
+      border-radius: 100px !important;
+      font-size: 0.72rem !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+    }
+    .sanction-grade-badge.light, .status-tag.warning {
+      background: rgba(255, 149, 0, 0.18) !important;
+      color: #FF9500 !important;
+      border: 1px solid rgba(255, 149, 0, 0.4) !important;
+    }
+    .sanction-grade-badge.severe, .status-tag.urgent {
+      background: rgba(255, 59, 48, 0.22) !important;
+      color: #FF3B30 !important;
+      border: 1px solid rgba(255, 59, 48, 0.5) !important;
+    }
+    .sanction-grade-badge.excused, .status-tag.done {
+      background: rgba(52, 199, 89, 0.18) !important;
+      color: #34C759 !important;
+      border: 1px solid rgba(52, 199, 89, 0.4) !important;
+    }
+    .sanction-reason, .sanction-reason-text {
+      font-size: 0.85rem !important;
+      color: #94A3B8 !important;
+      line-height: 1.45 !important;
+      margin-bottom: 8px !important;
+    }
+
+    /* HR Matrix Grid */
+    #protocol-members-container, .hr-members-grid {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+    @media (min-width: 768px) {
+      #protocol-members-container, .hr-members-grid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+    }
+    .member-row, .hr-member-card {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      padding: 14px 18px !important;
+      margin-bottom: 0 !important;
+    }
+    .member-info-col, .hr-member-left {
+      display: flex !important;
+      align-items: center !important;
+      gap: 14px !important;
+    }
+    .member-avatar-mini, .hr-member-avatar, .sanction-member-avatar {
+      width: 42px !important;
+      height: 42px !important;
+      border-radius: 50% !important;
+      background: linear-gradient(135deg, #003366, #0A1222) !important;
+      border: 2px solid #F7A81B !important;
+      color: #FFFFFF !important;
+      font-weight: 800 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 1rem !important;
+      flex-shrink: 0 !important;
+    }
+    .member-name-text, .hr-member-name {
+      font-size: 0.95rem !important;
+      font-weight: 700 !important;
+      color: #F8FAFC !important;
+      margin-bottom: 2px !important;
+    }
+    .member-role-sub, .hr-member-sub {
+      font-size: 0.76rem !important;
+      color: #F7A81B !important;
+      font-weight: 600 !important;
+    }
+    .member-strikes-badge {
+      display: inline-flex !important;
+      align-items: center !important;
+      padding: 3px 10px !important;
+      border-radius: 100px !important;
+      font-size: 0.74rem !important;
+      font-weight: 800 !important;
+      background: rgba(255, 59, 48, 0.2) !important;
+      color: #FF3B30 !important;
+      border: 1px solid rgba(255, 59, 48, 0.5) !important;
+    }
   </style>
 
-  <!-- Master Stylesheet (Cache Busted v4.0) -->
-  <link rel="stylesheet" href="./css/styles.css?v=4.0" />
+  <!-- Master Stylesheet (Cache Busted v5.0) -->
+  <link rel="stylesheet" href="./css/styles.css?v=5.0" />
 
   <!-- Firebase Web SDK (Compat version) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -577,19 +704,19 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- ==========================================================================
-       APPLICATION SCRIPTS (CACHE BUSTED V4.0)
+       APPLICATION SCRIPTS (CACHE BUSTED V5.0)
        ========================================================================== -->
-  <script src="./js/theme.js?v=4.0"></script>
-  <script src="./js/firebase-config.js?v=4.0"></script>
-  <script src="./js/auth.js?v=4.0"></script>
-  <script src="./js/commissions.js?v=4.0"></script>
-  <script src="./js/tasks.js?v=4.0"></script>
-  <script src="./js/task-workspace.js?v=4.0"></script>
-  <script src="./js/protocol.js?v=4.0"></script>
-  <script src="./js/channels.js?v=4.0"></script>
-  <script src="./js/calendar.js?v=4.0"></script>
-  <script src="./js/ai-assistant.js?v=4.0"></script>
-  <script src="./js/app.js?v=4.0"></script>
+  <script src="./js/theme.js?v=5.0"></script>
+  <script src="./js/firebase-config.js?v=5.0"></script>
+  <script src="./js/auth.js?v=5.0"></script>
+  <script src="./js/commissions.js?v=5.0"></script>
+  <script src="./js/tasks.js?v=5.0"></script>
+  <script src="./js/task-workspace.js?v=5.0"></script>
+  <script src="./js/protocol.js?v=5.0"></script>
+  <script src="./js/channels.js?v=5.0"></script>
+  <script src="./js/calendar.js?v=5.0"></script>
+  <script src="./js/ai-assistant.js?v=5.0"></script>
+  <script src="./js/app.js?v=5.0"></script>
 
   <!-- Auto-update Service Worker Cache -->
   <script>
