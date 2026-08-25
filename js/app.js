@@ -23,18 +23,26 @@ class AppController {
       });
     }
 
-    // Initialize sub-modules
-    if (window.commissionsManager) window.commissionsManager.init();
-    if (window.tasksManager) window.tasksManager.init();
-    if (window.protocolManager) window.protocolManager.init();
-    if (window.aiAssistant) window.aiAssistant.init();
-    if (window.channelsManager) window.channelsManager.init();
-    if (window.calendarManager) window.calendarManager.init();
+    // Initialize sub-modules safely
+    const safeInit = (name, mgr) => {
+      try {
+        if (mgr && typeof mgr.init === 'function') mgr.init();
+      } catch (err) {
+        console.error(`Error initializing ${name}:`, err);
+      }
+    };
 
-    // Render Home & Settings
-    this.renderHome();
-    this.renderSettings();
-    this.updateHeaderUI();
+    safeInit('commissionsManager', window.commissionsManager);
+    safeInit('tasksManager', window.tasksManager);
+    safeInit('protocolManager', window.protocolManager);
+    safeInit('aiAssistant', window.aiAssistant);
+    safeInit('channelsManager', window.channelsManager);
+    safeInit('calendarManager', window.calendarManager);
+
+    // Render Home & Settings safely
+    try { this.renderHome(); } catch(e) { console.error('Error in renderHome:', e); }
+    try { this.renderSettings(); } catch(e) { console.error('Error in renderSettings:', e); }
+    try { this.updateHeaderUI(); } catch(e) { console.error('Error in updateHeaderUI:', e); }
 
     // Attach Navigation Event Listeners (Both Mobile Bottom Bar & Desktop Sidebar)
     document.querySelectorAll('.nav-tab-btn, .sidebar-nav-btn').forEach(btn => {

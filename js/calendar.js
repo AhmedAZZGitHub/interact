@@ -57,14 +57,17 @@ class CalendarManager {
     // Also pull all task deadlines into the calendar
     const allTasks = window.tasksManager ? window.tasksManager.getAllTasksWithMetadata() : [];
     allTasks.forEach(t => {
+      const assignedNamesList = t.assignedNames || (t.assignedMembers || []).map(m => m.name || m) || [];
+      const assignedText = assignedNamesList.length > 0 ? assignedNamesList.join(', ') : 'Non assigné';
+
       combined.push({
-        id: 'task_event_' + t.id,
-        clubId: club.info.id,
-        actionId: t.actionId,
-        title: `⏰ Échéance : ${t.title}`,
-        description: `Tâche assignée à : ${t.assignedNames.join(', ')} (${t.commissionName})`,
-        startDateTime: t.deadline,
-        endDateTime: t.deadline,
+        id: 'task_event_' + (t.id || Math.random().toString(36).substr(2, 9)),
+        clubId: club.info?.id || 'interact_carthage',
+        actionId: t.actionId || '',
+        title: `⏰ Échéance : ${t.title || 'Tâche'}`,
+        description: `Tâche assignée à : ${assignedText} (${t.commissionName || 'Commission'})`,
+        startDateTime: t.deadline || new Date().toISOString(),
+        endDateTime: t.deadline || new Date().toISOString(),
         location: 'Suivi de Commission',
         type: 'deadline',
         isPublicToClub: true,

@@ -89,6 +89,7 @@ class TasksManager {
             const m = members[uid];
             return m ? { id: uid, name: m.displayName, initial: m.displayName.charAt(0) } : { id: uid, name: 'Membre inconnu', initial: '?' };
           });
+          const assignedNames = assignedMembers.map(m => m.name);
 
           allTasks.push({
             ...task,
@@ -101,7 +102,8 @@ class TasksManager {
             urgencyClass,
             badgeClass,
             badgeText,
-            assignedMembers
+            assignedMembers,
+            assignedNames
           });
         });
       });
