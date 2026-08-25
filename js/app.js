@@ -185,6 +185,7 @@ class AppController {
   }
 
   updateRoleGatekeeping() {
+    const user = window.authManager.getCurrentUser();
     const canPostAnn = window.authManager.canPostAnnouncement();
     const newAnnBtn = document.getElementById('btn-new-announcement');
     if (newAnnBtn) newAnnBtn.style.display = canPostAnn ? 'inline-flex' : 'none';
@@ -194,6 +195,30 @@ class AppController {
     const manualSncBtn = document.getElementById('btn-manual-sanction');
     if (scanBtn) scanBtn.style.display = canProt ? 'flex' : 'none';
     if (manualSncBtn) manualSncBtn.style.display = canProt ? 'inline-flex' : 'none';
+
+    // Pending Status Alert Banner
+    const pendingBanner = document.getElementById('app-pending-status-banner');
+    if (pendingBanner) {
+      if (user.status === 'pending_superadmin') {
+        pendingBanner.style.display = 'block';
+        pendingBanner.innerHTML = `
+          <div style="background:rgba(247,168,27,0.15); border:1px solid #F7A81B; padding:10px 16px; border-radius:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.8rem; color:#F7A81B; font-weight:700;">⏳ Club & Compte Président en attente d'approbation Super Admin</span>
+            <button class="btn-secondary compact" style="font-size:0.72rem; padding:3px 8px;" onclick="window.app.switchTab('settings')">Détails ➔</button>
+          </div>
+        `;
+      } else if (user.status === 'pending_president') {
+        pendingBanner.style.display = 'block';
+        pendingBanner.innerHTML = `
+          <div style="background:rgba(0,240,255,0.12); border:1px solid var(--accent-cyan); padding:10px 16px; border-radius:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.8rem; color:var(--accent-cyan); font-weight:700;">📨 Demande d'adhésion en attente de validation par le Président</span>
+            <button class="btn-secondary compact" style="font-size:0.72rem; padding:3px 8px;" onclick="window.app.switchTab('settings')">Détails ➔</button>
+          </div>
+        `;
+      } else {
+        pendingBanner.style.display = 'none';
+      }
+    }
   }
 
   renderHome() {
