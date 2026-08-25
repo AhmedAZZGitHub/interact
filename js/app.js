@@ -409,40 +409,129 @@ class AppController {
     }
   }
 
-  /* ================= MULTI-TENANT REGISTRATION & APPROVAL ACTIONS ================= */
-  openRegistrationModal() {
-    const activeClubs = window.dbStore.getActiveClubs();
+  /* ================= MULTI-TENANT AUTH & REGISTRATION MODALS ================= */
+  openLoginModal() {
+    const activeClubs = window.dbStore ? window.dbStore.getActiveClubs() : [];
     let clubOptions = '';
     activeClubs.forEach(c => {
-      clubOptions += `<option value="${c.id}">${c.name} (${c.district})</option>`;
+      clubOptions += `<option value="${c.id}">🏛️ ${c.name} (${c.district})</option>`;
     });
 
     const modalBody = `
-      <div style="display:flex; gap:8px; margin-bottom:16px; background:#0B1220; padding:4px; border-radius:100px;">
-        <button type="button" class="cal-view-btn active" id="btn-reg-mode-join" onclick="window.app.toggleRegFormMode('join')">
-          👤 Rejoindre un Club
-        </button>
-        <button type="button" class="cal-view-btn" id="btn-reg-mode-create" onclick="window.app.toggleRegFormMode('create')">
-          👑 Créer un Club (Président)
-        </button>
-      </div>
-
-      <!-- Form Mode 1: Join Club -->
-      <form id="form-reg-join" onsubmit="window.app.handleJoinClubRegistration(event)">
+      <form id="form-app-login" onsubmit="window.app.handleLoginSubmit(event)">
         <div class="form-group">
-          <label class="form-label">Club Interact Actif *</label>
-          <select name="clubId" class="form-select" required>
-            ${clubOptions || '<option value="club_carthage_01">Interact Club Carthage (District 9010)</option>'}
+          <label class="form-label">Adresse E-mail *</label>
+          <input 
+            type="email" 
+            name="email" 
+            id="login-input-email" 
+            class="form-input" 
+            placeholder="president@interact.org" 
+            required 
+            oninput="window.app.checkSuperAdminLoginEmail(this.value)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mot de passe *</label>
+          <input type="password" name="password" class="form-input" placeholder="••••••••" required />
+        </div>
+
+        <!-- Super Admin Bypass Notification -->
+        <div id="login-superadmin-badge" style="display:none; background:rgba(247,168,27,0.12); border:1px solid #F7A81B; color:#F7A81B; padding:10px 14px; border-radius:10px; font-size:0.78rem; margin-bottom:12px;">
+          🛡️ <strong>Accès Super Admin Global Détecté :</strong> Bypass automatique du sélecteur de club (Accès direct à la plateforme).
+        </div>
+
+        <!-- Standard Club Selector -->
+        <div class="form-group" id="login-club-selector-group">
+          <label class="form-label">Sélectionnez votre Club Interact *</label>
+          <select name="clubId" class="form-select">
+            ${clubOptions || '<option value="club_carthage_01">🏛️ Interact Club Carthage (District 9010)</option>'}
           </select>
         </div>
+
+        <button type="submit" class="btn-primary" style="width:100%; margin-top:8px;">
+          🔐 Se Connecter à mon Espace
+        </button>
+
+        <div style="margin-top:12px; text-align:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px;">
+          <button 
+            type="button" 
+            style="background:none; border:none; color:#F7A81B; font-size:0.74rem; font-weight:700; cursor:pointer; text-decoration:underline;"
+            onclick="document.getElementById('login-input-email').value='ahmedazzouzi72@gmail.com'; window.app.checkSuperAdminLoginEmail('ahmedazzouzi72@gmail.com');"
+          >
+            ⚡ Remplir Super Admin (ahmedazzouzi72@gmail.com)
+          </button>
+        </div>
+      </form>
+    `;
+
+    this.openModal('🔑 Connexion Multi-Clubs Interact', modalBody);
+  }
+
+  checkSuperAdminLoginEmail(email) {
+    const isSuperAdmin = email.trim().toLowerCase() === 'ahmedazzouzi72@gmail.com';
+    const badge = document.getElementById('login-superadmin-badge');
+    const clubGroup = document.getElementById('login-club-selector-group');
+
+    if (badge && clubGroup) {
+      if (isSuperAdmin) {
+        badge.style.display = 'block';
+        clubGroup.style.display = 'none';
+      } else {
+        badge.style.display = 'none';
+        clubGroup.style.display = 'block';
+      }
+    }
+  }
+
+  handleLoginSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const email = form.email.value.trim();
+    const password = form.password.value;
+    const clubId = form.clubId ? form.clubId.value : null;
+
+    const res = window.authManager.login(email, password, clubId);
+    if (res.success) {
+      this.closeModal();
+      this.showToast(`Connexion réussie : Bienvenue ${res.user.displayName} !`, 'success');
+      this.renderHome();
+      this.renderSettings();
+      this.updateHeaderUI();
+      this.updateRoleGatekeeping();
+    } else {
+      this.showToast(res.message || 'Échec de connexion.', 'error');
+    }
+  }
+
+  openRegistrationModal() {
+    const activeClubs = window.dbStore ? window.dbStore.getActiveClubs() : [];
+    let clubOptions = '';
+    activeClubs.forEach(c => {
+      clubOptions += `<option value="${c.id}">🏛️ ${c.name} (${c.district})</option>`;
+    });
+
+    const modalBody = `
+      <form id="form-app-registration" onsubmit="window.app.handleRegistrationSubmit(event)">
+        <h4 style="color:#F7A81B; margin:0 0 8px 0; font-size:0.82rem; text-transform:uppercase;">1. Informations Personnelles</h4>
+
         <div class="form-group">
           <label class="form-label">Nom et Prénom *</label>
-          <input type="text" name="displayName" class="form-input" placeholder="Ex: Yassine Ben Salem" required />
+          <input type="text" name="displayName" class="form-input" placeholder="Ex: Youssef Mahjoub" required />
         </div>
-        <div class="form-group">
-          <label class="form-label">Adresse Email *</label>
-          <input type="email" name="email" class="form-input" placeholder="membre@interact.org" required />
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label class="form-label">Adresse Email *</label>
+            <input type="email" name="email" class="form-input" placeholder="contact@interact.org" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mot de passe *</label>
+            <input type="password" name="password" class="form-input" placeholder="••••••••" required />
+          </div>
         </div>
+
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <div class="form-group">
             <label class="form-label">Téléphone / WhatsApp</label>
@@ -453,121 +542,170 @@ class AppController {
             <input type="date" name="birthDate" class="form-input" />
           </div>
         </div>
-        <p style="font-size:0.75rem; color:var(--text-muted); margin:8px 0 14px 0;">
-          ℹ️ Votre compte sera transmis au Président du club pour validation officielle.
-        </p>
-        <button type="submit" class="btn-primary" style="width:100%;">
-          📨 Envoyer la Demande d'Adhésion
-        </button>
-      </form>
 
-      <!-- Form Mode 2: Create Club -->
-      <form id="form-reg-create" style="display:none;" onsubmit="window.app.handleCreateClubRegistration(event)">
-        <h4 style="color:#F7A81B; margin:0 0 10px 0; font-size:0.85rem; text-transform:uppercase;">Informations du Nouveau Club</h4>
         <div class="form-group">
-          <label class="form-label">Nom Officiel du Club *</label>
-          <input type="text" name="clubName" class="form-input" placeholder="Ex: Interact Club La Marsa" required />
+          <label class="form-label">Poste Souhaité *</label>
+          <select name="requestedRole" id="reg-select-role" class="form-select" onchange="window.app.handleRoleChangeInRegistration(this.value)">
+            <option value="membre">🔹 Membre Actif</option>
+            <option value="recrue">🌱 Recrue / Nouvel Adhérent</option>
+            <option value="chef_commission">💼 Chef de Commission</option>
+            <option value="co_chef">🤝 Co-Chef</option>
+            <option value="secretaire">📋 Secrétaire</option>
+            <option value="protocole">⚖️ Protocole</option>
+            <option value="vice_president">⭐ Vice-Président</option>
+            <option value="president">👑 Président (Créateur ou Adhérent)</option>
+          </select>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group">
-            <label class="form-label">District Rotary</label>
-            <input type="text" name="district" class="form-input" value="District 9010" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Rotary Parrain</label>
-            <input type="text" name="sponsorRotaryClub" class="form-input" placeholder="Rotary Club Parrain" />
-          </div>
-        </div>
-        <h4 style="color:#F7A81B; margin:12px 0 10px 0; font-size:0.85rem; text-transform:uppercase;">Coordonnées du Président</h4>
-        <div class="form-group">
-          <label class="form-label">Nom et Prénom du Président *</label>
-          <input type="text" name="presName" class="form-input" placeholder="Ex: Youssef Mahjoub" required />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email Officiel du Président *</label>
-          <input type="email" name="presEmail" class="form-input" placeholder="president@interact.org" required />
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group">
-            <label class="form-label">Téléphone / WhatsApp</label>
-            <input type="tel" name="presPhone" class="form-input" placeholder="+216 98 000 000" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Date de Naissance</label>
-            <input type="date" name="presBirth" class="form-input" />
+
+        <h4 style="color:#F7A81B; margin:12px 0 8px 0; font-size:0.82rem; text-transform:uppercase;">2. Rattachement au Club</h4>
+
+        <!-- Option Toggle (Only visible if role is President) -->
+        <div id="reg-president-toggle-box" style="display:none; background:#0E172A; padding:6px; border-radius:10px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.08);">
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="cal-view-btn active" id="btn-choice-join" style="flex:1;" onclick="window.app.toggleClubCreationChoice(false)">
+              🏛️ Rejoindre un Club
+            </button>
+            <button type="button" class="cal-view-btn" id="btn-choice-create" style="flex:1;" onclick="window.app.toggleClubCreationChoice(true)">
+              ✨ Créer un nouveau Club
+            </button>
           </div>
         </div>
-        <div class="notice-box" style="margin:10px 0 14px 0; font-size:0.75rem; color:#00F0FF; background:rgba(0,240,255,0.08); padding:8px 12px; border-radius:8px;">
-          🛡️ La création d'un nouveau club est soumise à la validation par le Super Admin de la plateforme.
+
+        <!-- Section A: Join Existing Club -->
+        <div id="reg-section-join-club">
+          <div class="form-group">
+            <label class="form-label">Sélectionnez le Club Interact *</label>
+            <select name="clubId" class="form-select">
+              ${clubOptions || '<option value="club_carthage_01">🏛️ Interact Club Carthage (District 9010)</option>'}
+            </select>
+          </div>
+          <p style="font-size:0.74rem; color:var(--text-muted); margin:4px 0 12px 0;">
+            ℹ️ Votre compte sera placé en attente jusqu'à approbation par le Président du club sélectionné.
+          </p>
         </div>
-        <button type="submit" class="btn-primary" style="width:100%;">
-          🚀 Créer le Club & Soumettre au Super Admin
+
+        <!-- Section B: Create New Club (President) -->
+        <div id="reg-section-create-club" style="display:none; background:#0B1220; padding:12px; border-radius:12px; border:1px solid rgba(247,168,27,0.25); margin-bottom:12px;">
+          <div class="form-group">
+            <label class="form-label">Nom Officiel du Club *</label>
+            <input type="text" name="clubName" class="form-input" placeholder="Ex: Interact Club La Marsa" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">District Rotary</label>
+              <input type="text" name="district" class="form-input" value="District 9010" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ville</label>
+              <input type="text" name="city" class="form-input" placeholder="Ex: Tunis" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rotary Club Parrain</label>
+            <input type="text" name="sponsorRotaryClub" class="form-input" placeholder="Rotary Club La Marsa" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Devise / Description</label>
+            <textarea name="description" class="form-input" style="height:50px; resize:vertical;" placeholder="Servir d'abord • Objectifs..."></textarea>
+          </div>
+          <div style="font-size:0.75rem; color:#34C759; background:rgba(52,199,89,0.12); padding:8px 10px; border-radius:8px;">
+            👑 <strong>Accès Immédiat :</strong> En tant que Président Fondateur, vous accéderez instantanément à votre espace club.
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width:100%; margin-top:8px;">
+          🚀 Enregistrer & Continuer
         </button>
       </form>
     `;
 
-    this.openModal('📝 Inscription & Création Multi-Tenant', modalBody);
+    this.openModal('📝 Inscription Multi-Clubs Interact', modalBody);
   }
 
-  toggleRegFormMode(mode) {
-    const joinForm = document.getElementById('form-reg-join');
-    const createForm = document.getElementById('form-reg-create');
-    const joinBtn = document.getElementById('btn-reg-mode-join');
-    const createBtn = document.getElementById('btn-reg-mode-create');
-
-    if (mode === 'join') {
-      if (joinForm) joinForm.style.display = 'block';
-      if (createForm) createForm.style.display = 'none';
-      if (joinBtn) joinBtn.classList.add('active');
-      if (createBtn) createBtn.classList.remove('active');
-    } else {
-      if (joinForm) joinForm.style.display = 'none';
-      if (createForm) createForm.style.display = 'block';
-      if (joinBtn) joinBtn.classList.remove('active');
-      if (createBtn) createBtn.classList.add('active');
+  handleRoleChangeInRegistration(role) {
+    const toggleBox = document.getElementById('reg-president-toggle-box');
+    if (toggleBox) {
+      if (role === 'president') {
+        toggleBox.style.display = 'block';
+      } else {
+        toggleBox.style.display = 'none';
+        this.toggleClubCreationChoice(false);
+      }
     }
   }
 
-  handleJoinClubRegistration(event) {
-    event.preventDefault();
-    const form = event.target;
-    const clubId = form.clubId.value;
-    const displayName = form.displayName.value.trim();
-    const email = form.email.value.trim();
-    const phoneNumber = form.phoneNumber.value.trim();
-    const birthDate = form.birthDate.value;
+  toggleClubCreationChoice(isCreate) {
+    const joinSection = document.getElementById('reg-section-join-club');
+    const createSection = document.getElementById('reg-section-create-club');
+    const btnJoin = document.getElementById('btn-choice-join');
+    const btnCreate = document.getElementById('btn-choice-create');
 
-    window.authManager.joinExistingClub({
-      clubId,
-      displayName,
-      email,
-      phoneNumber,
-      birthDate,
-      role: 'membre'
-    });
-
-    this.closeModal();
-    this.showToast('Demande d\'adhésion envoyée au Président du club ! 📨', 'success');
+    if (isCreate) {
+      if (joinSection) joinSection.style.display = 'none';
+      if (createSection) createSection.style.display = 'block';
+      if (btnJoin) btnJoin.classList.remove('active');
+      if (btnCreate) btnCreate.classList.add('active');
+    } else {
+      if (joinSection) joinSection.style.display = 'block';
+      if (createSection) createSection.style.display = 'none';
+      if (btnJoin) btnJoin.classList.add('active');
+      if (btnCreate) btnCreate.classList.remove('active');
+    }
   }
 
-  handleCreateClubRegistration(event) {
+  handleRegistrationSubmit(event) {
     event.preventDefault();
     const form = event.target;
-    const clubName = form.clubName.value.trim();
-    const district = form.district.value.trim();
-    const sponsorRotaryClub = form.sponsorRotaryClub.value.trim();
-    const presName = form.presName.value.trim();
-    const presEmail = form.presEmail.value.trim();
-    const presPhone = form.presPhone.value.trim();
-    const presBirth = form.presBirth.value;
+    const displayName = form.displayName.value.trim();
+    const email = form.email.value.trim();
+    const password = form.password.value;
+    const phoneNumber = form.phoneNumber.value.trim();
+    const birthDate = form.birthDate.value;
+    const requestedRole = form.requestedRole.value;
 
-    window.authManager.registerNewClub(
-      { name: clubName, district, sponsorRotaryClub },
-      { displayName: presName, email: presEmail, phoneNumber: presPhone, birthDate: presBirth }
-    );
+    const isCreatingClub = requestedRole === 'president' && 
+      document.getElementById('reg-section-create-club') && 
+      document.getElementById('reg-section-create-club').style.display !== 'none';
 
-    this.closeModal();
-    this.showToast('Club créé avec succès ! En attente d\'approbation Super Admin. ⏳', 'warning');
+    if (isCreatingClub) {
+      const clubName = form.clubName.value.trim();
+      const district = form.district.value.trim();
+      const city = form.city.value.trim();
+      const sponsorRotaryClub = form.sponsorRotaryClub.value.trim();
+      const description = form.description.value.trim();
+
+      if (!clubName) {
+        this.showToast('Veuillez renseigner le nom officiel de votre club.', 'error');
+        return;
+      }
+
+      window.authManager.registerPresidentWithClub(
+        { displayName, email, password, phoneNumber, birthDate },
+        { name: clubName, district, city, sponsorRotaryClub, description }
+      );
+
+      this.closeModal();
+      this.showToast(`Club "${clubName}" créé ! Bienvenue Président ${displayName} 👑`, 'success');
+    } else {
+      const clubId = form.clubId.value;
+      window.authManager.registerMemberJoiningClub({
+        displayName,
+        email,
+        password,
+        phoneNumber,
+        birthDate,
+        clubId,
+        requestedRole
+      });
+
+      this.closeModal();
+      this.showToast('Demande transmise au Président du club ! Statut : En attente de validation ⏳', 'warning');
+    }
+
+    this.renderHome();
+    this.renderSettings();
+    this.updateHeaderUI();
+    this.updateRoleGatekeeping();
   }
 
   handleSuperAdminApproveClub(clubId) {

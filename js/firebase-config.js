@@ -55,8 +55,8 @@ const DEFAULT_SEED_DATA = {
       members: {
         "user_superadmin": {
           id: "user_superadmin",
-          email: "superadmin@interact-platform.org",
-          displayName: "Super Admin Platform",
+          email: "ahmedazzouzi72@gmail.com",
+          displayName: "Ahmed Azzouzi (Super Admin)",
           role: "superadmin",
           isSuperAdmin: true,
           phoneNumber: "+216 20 000 000",
@@ -65,7 +65,7 @@ const DEFAULT_SEED_DATA = {
           dateJoined: "2023-01-01T00:00:00Z",
           strikesCount: 0,
           status: "active",
-          history: [{ year: "2023-2026", role: "superadmin", notes: "Administration Globale Plateforme" }]
+          history: [{ year: "2023-2027", role: "superadmin", notes: "Super Admin Fondateur Plateforme Interact" }]
         },
         "user_pres": {
           id: "user_pres",
