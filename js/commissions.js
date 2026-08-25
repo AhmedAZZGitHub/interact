@@ -2,6 +2,7 @@
  * ==========================================================================
  * COMMISSIONS & ACTIONS HIERARCHY MANAGER
  * Hierarchy: Club -> Commissions -> Actions -> Tasks
+ * Encapsulated in modern Glassmorphism Interact Cards
  * ==========================================================================
  */
 
@@ -33,7 +34,7 @@ class CommissionsManager {
     const commKeys = Object.keys(commissions);
     if (commKeys.length === 0) {
       this.container.innerHTML = `
-        <div class="glass-card" style="text-align:center; padding: 30px;">
+        <div class="interact-card" style="text-align:center; padding: 30px;">
           <p style="color:var(--text-muted);">Aucune commission configurée pour le moment.</p>
         </div>
       `;
@@ -71,8 +72,8 @@ class CommissionsManager {
       let actionsHtml = '';
       if (actionKeys.length === 0) {
         actionsHtml = `
-          <div style="padding: 12px; text-align: center; color: var(--text-dim); font-size: 0.82rem;">
-            Aucune action en cours.
+          <div class="interact-subcard" style="text-align:center; color: var(--text-dim); font-size: 0.84rem; padding:16px;">
+            Aucune action en cours dans cette commission.
           </div>
         `;
       } else {
@@ -84,30 +85,37 @@ class CommissionsManager {
           const actTotal = actTaskKeys.length;
           const actDone = actTaskKeys.filter(k => actTasks[k].status === 'completed').length;
           const actProgress = actTotal > 0 ? Math.round((actDone / actTotal) * 100) : 0;
+          const isDone = actInfo.status === 'completed' || (actTotal > 0 && actDone === actTotal);
 
           actionsHtml += `
-            <div class="action-card">
-              <div class="action-head">
-                <div class="action-title">${actInfo.title || 'Action sans titre'}</div>
-                <span class="header-badge" style="font-size:0.65rem;">${actInfo.status === 'completed' ? 'Terminée' : 'En cours'}</span>
+            <div class="interact-subcard action-subcard">
+              <div class="action-subcard-head">
+                <div>
+                  <h4 class="action-subcard-title">${actInfo.title || 'Action sans titre'}</h4>
+                  <p class="action-subcard-desc">${actInfo.description || ''}</p>
+                </div>
+                <span class="status-tag ${isDone ? 'done' : 'inprogress'}">
+                  ${isDone ? '✓ [TERMINÉ]' : '⏳ [EN COURS]'}
+                </span>
               </div>
-              <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:6px;">${actInfo.description || ''}</p>
               
-              <div class="action-progress-container">
-                <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted); margin-bottom:3px;">
-                  <span>Progression (${actDone}/${actTotal} tâches)</span>
-                  <span style="color:var(--neon-cyan); font-weight:700;">${actProgress}%</span>
+              <!-- Progress Bar -->
+              <div class="action-progress-box">
+                <div class="action-progress-labels">
+                  <span>Progression (${actDone}/${actTotal} tâches complétées)</span>
+                  <span class="progress-percent">${actProgress}%</span>
                 </div>
                 <div class="progress-bar-bg">
                   <div class="progress-bar-fill" style="width: ${actProgress}%;"></div>
                 </div>
               </div>
 
-              <div class="action-footer">
-                <span>🗓️ Du ${actInfo.startDate || 'N/A'} au ${actInfo.endDate || 'N/A'}</span>
+              <!-- Action Footer Info & Buttons -->
+              <div class="action-subcard-footer">
+                <span class="action-date-tag">🗓️ Du <strong>${actInfo.startDate || 'N/A'}</strong> au <strong>${actInfo.endDate || 'N/A'}</strong></span>
                 ${canManage ? `
-                  <button class="btn-link" onclick="window.commissionsManager.openNewTaskModal('${commId}', '${actId}')" style="font-size:0.75rem;">
-                    + Tâche
+                  <button class="btn-primary-compact" onclick="window.commissionsManager.openNewTaskModal('${commId}', '${actId}')">
+                    + Assigner Tâche
                   </button>
                 ` : ''}
               </div>
@@ -117,35 +125,39 @@ class CommissionsManager {
       }
 
       html += `
-        <div class="commission-card ${index === 0 ? 'expanded' : ''}" id="commission-card-${commId}">
-          <div class="commission-header" onclick="window.commissionsManager.toggleCommission('${commId}')">
-            <div class="commission-info">
-              <div class="commission-badge-icon">${info.icon || '💼'}</div>
-              <div>
-                <div class="commission-title">${info.name || 'Commission'}</div>
-                <div class="commission-leaders">👑 ${chefName}${coChefText}</div>
+        <div class="interact-card commission-main-card ${index === 0 ? 'expanded' : ''}" id="commission-card-${commId}">
+          <div class="commission-card-header" onclick="window.commissionsManager.toggleCommission('${commId}')">
+            <div class="commission-header-main">
+              <div class="commission-icon-badge">${info.icon || '💼'}</div>
+              <div class="commission-header-titles">
+                <h3 class="commission-main-title">${info.name || 'Commission'}</h3>
+                <div class="commission-leaders-subtitle">👑 <strong>${chefName}</strong>${coChefText}</div>
               </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span class="header-badge" style="background:rgba(0,240,255,0.12); color:var(--neon-cyan); border-color:var(--border-cyan);">
-                ${overallProgress}%
-              </span>
-              <span class="commission-toggle-icon">▼</span>
+            
+            <div class="commission-header-meta">
+              <div class="commission-progress-pill">
+                <span class="progress-num">${overallProgress}%</span>
+              </div>
+              <span class="commission-toggle-arrow">▼</span>
             </div>
           </div>
-          <div class="commission-body">
-            <p style="font-size:0.82rem; color:var(--text-muted); margin: 10px 0 6px 0;">${info.description || ''}</p>
+
+          <div class="commission-card-body">
+            <p class="commission-desc-paragraph">${info.description || ''}</p>
             
-            <div class="section-header" style="margin-top:12px; margin-bottom:6px;">
-              <span style="font-size:0.85rem; font-weight:700; color:var(--text-main);">🎯 Actions de la Commission</span>
+            <!-- Actions Section Header -->
+            <div class="actions-section-toolbar">
+              <span class="actions-section-title">🎯 Actions & Projets Opérationnels</span>
               ${canManage ? `
-                <button class="btn-link" onclick="window.commissionsManager.openNewActionModal('${commId}')">
+                <button class="btn-primary-compact gold" onclick="window.commissionsManager.openNewActionModal('${commId}')">
                   + Nouvelle Action
                 </button>
               ` : ''}
             </div>
 
-            <div class="actions-list">
+            <!-- Nested Action Subcards -->
+            <div class="actions-subcards-list">
               ${actionsHtml}
             </div>
           </div>
@@ -228,7 +240,6 @@ class CommissionsManager {
       memberOptions += `<option value="${m.id}">${m.displayName} (${window.ROLE_LABELS[m.role] || m.role})</option>`;
     });
 
-    // Default deadline 3 days from now
     const defaultDeadline = new Date(Date.now() + 72 * 3600 * 1000).toISOString().slice(0, 16);
 
     const modalBody = `

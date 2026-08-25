@@ -2,6 +2,7 @@
  * ==========================================================================
  * TASKS & TO-DO MANAGER
  * Real-time tracking, urgency sorting (Red/Orange/Green), status toggles.
+ * Structured Glassmorphism Task Cards & Badges
  * ==========================================================================
  */
 
@@ -66,26 +67,27 @@ class TasksManager {
           if (task.status === 'completed') {
             urgencyClass = 'status-completed';
             badgeClass = 'badge-done';
-            badgeText = '✓ Terminée';
+            badgeText = '✓ [TERMINÉE]';
           } else if (isOverdue) {
             urgencyClass = 'status-urgent';
             badgeClass = 'badge-urgent';
             const hoursOverdue = Math.max(1, Math.round((now - deadlineDate) / (1000 * 60 * 60)));
-            badgeText = `🚨 Retard (${hoursOverdue}h)`;
+            badgeText = `🚨 [RETARD ${hoursOverdue}h]`;
           } else if (hoursRemaining <= 24) {
             urgencyClass = 'status-warning';
             badgeClass = 'badge-warning';
             const hrs = Math.max(1, Math.round(hoursRemaining));
-            badgeText = `⏰ Urgence (${hrs}h)`;
+            badgeText = `⏰ [URGENT ${hrs}h]`;
           } else {
             urgencyClass = 'status-normal';
             badgeClass = 'badge-normal';
-            badgeText = `🗓️ ${deadlineDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+            badgeText = `🗓️ [${deadlineDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}]`;
           }
 
-          // Assigned member names
-          const assignedNames = (task.assignedTo || []).map(uid => {
-            return members[uid] ? members[uid].displayName : 'Membre inconnu';
+          // Assigned member names and initials
+          const assignedMembers = (task.assignedTo || []).map(uid => {
+            const m = members[uid];
+            return m ? { id: uid, name: m.displayName, initial: m.displayName.charAt(0) } : { id: uid, name: 'Membre inconnu', initial: '?' };
           });
 
           allTasks.push({
@@ -99,7 +101,7 @@ class TasksManager {
             urgencyClass,
             badgeClass,
             badgeText,
-            assignedNames
+            assignedMembers
           });
         });
       });
@@ -139,10 +141,11 @@ class TasksManager {
       let emptyMsg = "Aucune tâche répertoriée dans cette catégorie.";
       if (this.currentFilter === 'mine') emptyMsg = "Bravo ! Vous n'avez aucune tâche assignée en attente.";
       if (this.currentFilter === 'overdue') emptyMsg = "Superbe ! Aucun retard constaté sur l'ensemble du club.";
+      if (this.currentFilter === 'completed') emptyMsg = "Aucune tâche terminée pour le moment.";
 
       this.container.innerHTML = `
-        <div class="glass-card" style="text-align:center; padding: 30px;">
-          <p style="color:var(--text-muted); font-size:0.9rem;">${emptyMsg}</p>
+        <div class="interact-card" style="text-align:center; padding: 36px 20px;">
+          <p style="color:var(--text-muted); font-size:0.92rem;">${emptyMsg}</p>
         </div>
       `;
       return;
@@ -158,30 +161,49 @@ class TasksManager {
 
       let deliverableBadge = '';
       if (hasValidatedSub) {
-        deliverableBadge = `<span class="deadline-badge badge-done" style="font-size:0.68rem;">📎 Livrable Validé</span>`;
+        deliverableBadge = `<span class="status-tag done" style="font-size:0.68rem;">📎 Livrable Validé</span>`;
       } else if (hasSubmissions) {
-        deliverableBadge = `<span class="deadline-badge badge-warning" style="font-size:0.68rem;">⏳ Livrable en Attente</span>`;
+        deliverableBadge = `<span class="status-tag inprogress" style="font-size:0.68rem;">⏳ Livrable en Attente</span>`;
       }
 
+      const memberNames = task.assignedMembers.map(m => m.name).join(', ') || 'Non assigné';
+
       html += `
-        <div class="task-item ${task.urgencyClass}" id="task-card-${task.id}">
-          <input 
-            type="checkbox" 
-            class="task-checkbox" 
-            ${isChecked ? 'checked' : ''} 
-            ${!canToggle ? 'disabled' : ''}
-            onchange="window.tasksManager.handleToggleTask('${task.commissionId}', '${task.actionId}', '${task.id}', this.checked)"
-          />
-          <div class="task-body" onclick="window.taskWorkspaceManager.openWorkspace('${task.commissionId}', '${task.actionId}', '${task.id}')" style="cursor:pointer;">
-            <div class="task-title">${task.title}</div>
-            <div class="task-meta">
-              <span class="deadline-badge ${task.badgeClass}">${task.badgeText}</span>
-              ${deliverableBadge}
-              <span style="color:var(--interact-gold);">📁 ${task.commissionName}</span>
-              <span class="task-assignee">👤 ${task.assignedNames.join(', ') || 'Non assigné'}</span>
-              <span class="btn-link" style="font-size:0.72rem; padding:0; margin-left:auto;">
-                Ouvrir l'Espace ➔
-              </span>
+        <div class="interact-card task-card ${task.urgencyClass}" id="task-card-${task.id}">
+          <div class="task-card-inner">
+            <input 
+              type="checkbox" 
+              class="task-custom-checkbox" 
+              ${isChecked ? 'checked' : ''} 
+              ${!canToggle ? 'disabled' : ''}
+              onchange="window.tasksManager.handleToggleTask('${task.commissionId}', '${task.actionId}', '${task.id}', this.checked)"
+              title="${canToggle ? 'Valider la tâche' : 'Non autorisé'}"
+            />
+            
+            <div class="task-card-content" onclick="window.taskWorkspaceManager.openWorkspace('${task.commissionId}', '${task.actionId}', '${task.id}')">
+              <div class="task-card-header-row">
+                <h4 class="task-card-title">${task.title}</h4>
+                <span class="status-tag ${task.badgeClass}">
+                  ${task.badgeText}
+                </span>
+              </div>
+
+              <div class="task-card-meta-row">
+                <span class="meta-pill commission-pill">
+                  📁 ${task.commissionName}
+                </span>
+                <span class="meta-pill action-pill">
+                  🎯 ${task.actionTitle}
+                </span>
+                <span class="meta-pill assignee-pill">
+                  👤 ${memberNames}
+                </span>
+                ${deliverableBadge}
+                
+                <span class="btn-link task-open-btn">
+                  Espace Rendu ➔
+                </span>
+              </div>
             </div>
           </div>
         </div>

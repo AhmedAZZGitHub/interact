@@ -148,7 +148,7 @@
       <!-- ================= TAB 1: ACCUEIL ================= -->
       <section id="view-home" class="view-section active">
         <!-- Club Hero Banner -->
-        <div class="glass-card club-hero-card gold-border">
+        <div class="interact-card club-hero-card gold-border">
           <div class="hero-meta">
             <span class="hero-badge-rotary">⚙️ ROTARY CLUB SPONSOR</span>
             <span class="header-badge" style="background:rgba(0,240,255,0.15); color:var(--neon-cyan); border-color:var(--border-cyan);">
@@ -206,7 +206,7 @@
           <div>
             <h2 class="section-title">👥 Commissions & Projets</h2>
             <p style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
-              Arborescence : Commission ➔ Actions ➔ Tâches
+              Arborescence structurée : Commission ➔ Actions ➔ Tâches
             </p>
           </div>
         </div>
@@ -227,7 +227,7 @@
           </div>
         </div>
 
-        <!-- Urgency Filter Chips -->
+        <!-- Urgency Filter Chips (Single Horizontal Scrollable Line) -->
         <div class="tasks-filter-bar" id="tasks-filter-chips">
           <div class="filter-chip active" data-filter="all" onclick="window.tasksManager.setFilter('all')">
             Toutes
@@ -239,7 +239,7 @@
             🚨 Retards Critiques
           </div>
           <div class="filter-chip" data-filter="completed" onclick="window.tasksManager.setFilter('completed')">
-            ✓ Terminées
+            ✅ Terminées
           </div>
         </div>
 
@@ -256,7 +256,7 @@
       <!-- ================= TAB 6: PROTOCOLE & RH ================= -->
       <section id="view-protocol" class="view-section">
         <!-- Protocole Hero Watchdog -->
-        <div class="glass-card" style="background:linear-gradient(135deg, rgba(255,59,48,0.15), var(--bg-card)); border-color:rgba(255,59,48,0.35);">
+        <div class="interact-card protocol-hero-card" style="background:linear-gradient(135deg, rgba(255,59,48,0.15), var(--bg-card)); border-color:rgba(255,59,48,0.35);">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="font-size:1.1rem; font-weight:800; color:var(--text-main);">⚖️ Protocole & Discipline</h3>
             <button id="btn-protocol-scan" class="btn-primary" style="background:linear-gradient(135deg, #FF3B30, #D90429); color:#FFF; width:auto; padding:6px 12px; font-size:0.75rem;" onclick="window.protocolManager.runDeadlinesWatchdog(true)">
@@ -347,7 +347,7 @@
       <!-- ================= TAB 8: PARAMÈTRES & PROFIL ================= -->
       <section id="view-settings" class="view-section">
         <!-- Profile Card -->
-        <div class="glass-card gold-border">
+        <div class="interact-card gold-border">
           <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
             <div class="user-avatar-btn" style="width:52px; height:52px; font-size:1.3rem;">
               👤
@@ -367,7 +367,7 @@
         </div>
 
         <!-- Quick Role Simulation Switcher -->
-        <div class="glass-card">
+        <div class="interact-card">
           <h4 style="font-size:0.95rem; color:var(--text-main); margin-bottom:6px;">🎭 Simulateur de Rôles & Permissions</h4>
           <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
             Basculez instantanément entre les membres pour tester les contrôles d'accès RBAC (Président, Secrétaire, Protocole, Chef Commission, Membre, Recrue).
@@ -381,7 +381,7 @@
         </div>
 
         <!-- Theme Switcher -->
-        <div class="glass-card">
+        <div class="interact-card">
           <h4 style="font-size:0.95rem; color:var(--text-main); margin-bottom:6px;">🎨 Thème d'Affichage</h4>
           <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
             Basculez entre le thème Sombre Obsidian et le thème Clair Rotary.
@@ -392,7 +392,7 @@
         </div>
 
         <!-- Gemini AI Settings -->
-        <div class="glass-card">
+        <div class="interact-card">
           <h4 style="font-size:0.95rem; color:var(--text-main); margin-bottom:6px;">🤖 Configuration IA Gemini</h4>
           <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
             Clé API Google Gemini (Modèle : <code>gemini-3.6-flash</code>).
@@ -407,7 +407,7 @@
         </div>
 
         <!-- Data Management & Reset -->
-        <div class="glass-card">
+        <div class="interact-card">
           <h4 style="font-size:0.95rem; color:var(--text-main); margin-bottom:6px;">🛠️ Gestion & Démonstration</h4>
           <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
             Réinitialiser la base de données locale du club aux données de démonstration initiales.

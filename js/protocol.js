@@ -2,6 +2,7 @@
  * ==========================================================================
  * PROTOCOLE & DISCIPLINE ENGINE (AUTOMATIC SANCTIONS WATCHDOG)
  * Automatic delay detection, strikes count, sanctions moderation & HR matrix.
+ * Structured Glassmorphism Sanctions & HR Table
  * ==========================================================================
  */
 
@@ -118,8 +119,8 @@ class ProtocolManager {
     const sanctionKeys = Object.keys(sanctions);
     if (sanctionKeys.length === 0) {
       this.sanctionsContainer.innerHTML = `
-        <div class="glass-card" style="text-align:center; padding: 24px;">
-          <p style="color:var(--text-muted); font-size:0.85rem;">🕊️ Aucune sanction enregistrée. La discipline du club est exemplaire.</p>
+        <div class="interact-card" style="text-align:center; padding: 28px;">
+          <p style="color:var(--text-muted); font-size:0.88rem;">🕊️ Aucune sanction enregistrée. La discipline du club est exemplaire.</p>
         </div>
       `;
       return;
@@ -141,38 +142,48 @@ class ProtocolManager {
 
       let gradeBadge = '';
       if (isExcused) {
-        gradeBadge = `<span class="sanction-grade-badge excused">🕊️ Excusée</span>`;
+        gradeBadge = `<span class="status-tag done">🕊️ [EXCUSÉE]</span>`;
       } else if (isSevere) {
-        gradeBadge = `<span class="sanction-grade-badge severe">⚡ Sévère (Gr. 2)</span>`;
+        gradeBadge = `<span class="status-tag urgent">⚡ [SÉVÈRE GR. 2]</span>`;
       } else {
-        gradeBadge = `<span class="sanction-grade-badge light">⚠️ Légère (Gr. 1)</span>`;
+        gradeBadge = `<span class="status-tag warning">⚠️ [LÉGÈRE GR. 1]</span>`;
       }
 
       html += `
-        <div class="sanction-item ${isSevere ? 'severe' : ''} ${isExcused ? 'excused' : ''}">
-          <div class="sanction-top">
-            <div class="sanction-member">👤 ${memberName}</div>
+        <div class="interact-card sanction-card ${isSevere ? 'severe' : ''} ${isExcused ? 'excused' : ''}">
+          <div class="sanction-card-topbar">
+            <div class="sanction-member-info">
+              <span class="sanction-member-avatar">${memberName.charAt(0)}</span>
+              <div>
+                <h4 class="sanction-member-name">${memberName}</h4>
+                <span class="sanction-action-ref">🎯 ${s.actionTitle || 'Discipline Club'}</span>
+              </div>
+            </div>
             ${gradeBadge}
           </div>
-          <div class="sanction-reason">
+
+          <p class="sanction-reason-text">
             ${s.reason}
+          </p>
+
+          <div class="sanction-meta-row">
+            <span class="sanction-date-tag">📅 ${new Date(s.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+            <span class="sanction-delay-tag">⏱️ Retard : <strong>${s.delayHours || 0}h</strong></span>
           </div>
-          <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-dim);">
-            <span>📅 ${new Date(s.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-            <span>Retard : ${s.delayHours || 0}h</span>
-          </div>
+
           ${isExcused && s.excuseReason ? `
-            <div style="font-size:0.75rem; color:var(--success-green); background:rgba(52,199,89,0.1); padding:6px 8px; border-radius:6px; border:1px solid rgba(52,199,89,0.2);">
-              📝 <strong>Motif d'excuse :</strong> ${s.excuseReason} (${s.excusedBy || 'Protocole'})
+            <div class="sanction-excuse-feedback">
+              📝 <strong>Motif de l'exemption :</strong> ${s.excuseReason} (${s.excusedBy || 'Protocole'})
             </div>
           ` : ''}
+
           ${canModerate && !isExcused ? `
-            <div class="sanction-actions-row">
-              <button class="btn-sanction-action severe-toggle" onclick="window.protocolManager.toggleGrade('${s.id}', '${isSevere ? 'light' : 'severe'}')">
-                ${isSevere ? 'Passer en Légère' : 'Passer en Sévère'}
+            <div class="sanction-actions-toolbar">
+              <button class="btn-secondary compact" onclick="window.protocolManager.toggleGrade('${s.id}', '${isSevere ? 'light' : 'severe'}')">
+                ${isSevere ? 'Passer en Légère (Gr. 1)' : 'Passer en Sévère (Gr. 2)'}
               </button>
-              <button class="btn-sanction-action excuse" onclick="window.protocolManager.openExcuseModal('${s.id}')">
-                🕊️ Valider Excuse
+              <button class="btn-primary-compact green" onclick="window.protocolManager.openExcuseModal('${s.id}')">
+                🕊️ Valider Excuse & Exemption
               </button>
             </div>
           ` : ''}
@@ -194,30 +205,34 @@ class ProtocolManager {
     let html = '';
     Object.values(members).forEach(m => {
       const comm = commissions[m.commissionId];
-      const commName = comm ? comm.info?.name : 'Non rattaché';
+      const commName = comm ? comm.info?.name : 'Direction';
       const strikes = m.strikesCount || 0;
 
-      let strikesHtml = '';
+      let strikesBadge = '';
       if (strikes === 0) {
-        strikesHtml = `<span style="font-size:0.75rem; color:var(--success-green); font-weight:700;">0 Strike</span>`;
+        strikesBadge = `<span class="status-tag done">0 Strike</span>`;
       } else {
-        strikesHtml = `<span class="member-strikes-badge">⚡ ${strikes} Strike${strikes > 1 ? 's' : ''}</span>`;
+        strikesBadge = `<span class="status-tag urgent">⚡ ${strikes} Strike${strikes > 1 ? 's' : ''}</span>`;
       }
 
       html += `
-        <div class="member-row">
-          <div class="member-info-col">
-            <div class="member-avatar-mini">${m.displayName.charAt(0)}</div>
-            <div>
-              <div class="member-name-text">${m.displayName}</div>
-              <div class="member-role-sub">${window.ROLE_LABELS[m.role] || m.role} • <span style="color:var(--interact-gold);">${commName}</span></div>
+        <div class="interact-card hr-member-card">
+          <div class="hr-member-left">
+            <div class="hr-member-avatar">${m.displayName.charAt(0)}</div>
+            <div class="hr-member-details">
+              <h4 class="hr-member-name">${m.displayName}</h4>
+              <div class="hr-member-sub">
+                <span class="hr-member-role">${window.ROLE_LABELS[m.role] || m.role}</span>
+                <span class="hr-member-comm">📁 ${commName}</span>
+              </div>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            ${strikesHtml}
+
+          <div class="hr-member-right">
+            ${strikesBadge}
             ${canManageHR ? `
-              <button class="btn-link" onclick="window.protocolManager.openEditMemberModal('${m.id}')" style="font-size:0.75rem;">
-                Modifier
+              <button class="btn-secondary compact" onclick="window.protocolManager.openEditMemberModal('${m.id}')">
+                Modifier Rôle
               </button>
             ` : ''}
           </div>
@@ -225,7 +240,7 @@ class ProtocolManager {
       `;
     });
 
-    this.membersContainer.innerHTML = html;
+    this.membersContainer.innerHTML = `<div class="hr-members-grid">${html}</div>`;
   }
 
   toggleGrade(sanctionId, newGrade) {
