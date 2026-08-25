@@ -1,11 +1,12 @@
 /**
  * ==========================================================================
  * AUTHENTICATION & RBAC PERMISSION MATRIX
- * Manages user sessions, role checks, and instant role switching for simulation.
+ * Manages user sessions, multi-tenant roles, and simulation switching.
  * ==========================================================================
  */
 
 const ROLES = {
+  SUPERADMIN: 'superadmin',
   PRESIDENT: 'president',
   VICE_PRESIDENT: 'vice_president',
   SECRETAIRE: 'secretaire',
@@ -18,6 +19,7 @@ const ROLES = {
 };
 
 const ROLE_LABELS = {
+  'superadmin': '🛡️ Super Admin (Plateforme)',
   'president': '👑 Président',
   'vice_president': '⭐ Vice-Président',
   'secretaire': '📋 Secrétaire (RH)',
@@ -31,7 +33,7 @@ const ROLE_LABELS = {
 
 class AuthManager {
   constructor() {
-    this.storageKey = 'interact_current_user_v1';
+    this.storageKey = 'interact_current_user_v2';
     this.currentUser = this.loadSession();
     this.authListeners = [];
   }
@@ -53,7 +55,8 @@ class AuthManager {
       role: ROLES.PRESIDENT,
       commissionId: "comm_direction",
       clubId: "club_carthage_01",
-      strikesCount: 0
+      strikesCount: 0,
+      status: "active"
     };
   }
 
@@ -68,7 +71,6 @@ class AuthManager {
   }
 
   getCurrentUser() {
-    // Refresh user state from dbStore to get live strikes and details
     if (this.currentUser && window.dbStore) {
       const liveMember = window.dbStore.getMember(this.currentUser.id, this.currentUser.clubId);
       if (liveMember) {
@@ -97,112 +99,89 @@ class AuthManager {
 
   login(email, password) {
     const club = window.dbStore.getClub();
-    const foundUser = Object.values(club.members).find(m => m.email.toLowerCase() === email.toLowerCase());
+    const foundUser = Object.values(club.members || {}).find(m => m.email.toLowerCase() === email.toLowerCase());
     if (foundUser) {
       this.saveSession({
         ...foundUser,
-        clubId: club.info.id
+        clubId: club.info?.id || "club_carthage_01"
       });
       return { success: true, user: foundUser };
     }
     return { success: false, message: "Utilisateur non trouvé avec cet email." };
   }
 
-  register(userData) {
-    const club = window.dbStore.getClub();
-    const newUid = 'user_' + Date.now();
-    const newMember = {
-      id: newUid,
-      email: userData.email,
-      displayName: userData.displayName,
-      role: userData.role || ROLES.RECRUE,
-      commissionId: userData.commissionId || "comm_sociale",
-      dateJoined: new Date().toISOString(),
-      strikesCount: 0,
-      avatarUrl: ""
-    };
-
-    if (!club.members) club.members = {};
-    club.members[newUid] = newMember;
-    window.dbStore.saveData(window.dbStore.data);
+  registerNewClub(clubData, presidentData) {
+    if (!window.dbStore) return null;
+    const newClub = window.dbStore.createClub(clubData, presidentData);
+    const presUid = newClub.info.presidentUid;
+    const presMember = newClub.members[presUid];
 
     this.saveSession({
-      ...newMember,
-      clubId: club.info.id
+      ...presMember,
+      clubId: newClub.info.id
     });
-    return { success: true, user: newMember };
+    return { club: newClub, user: presMember };
   }
 
-  logout() {
-    localStorage.removeItem(this.storageKey);
-    // Fallback to recruit or guest
+  joinExistingClub(userData) {
+    if (!window.dbStore) return null;
+    const newMember = window.dbStore.registerMember(userData);
     this.saveSession({
-      id: "user_guest",
-      email: "invite@interact.org",
-      displayName: "Visiteur / Invité",
-      role: ROLES.RECRUE,
-      commissionId: "comm_sociale",
-      clubId: "club_carthage_01",
-      strikesCount: 0
+      ...newMember,
+      clubId: userData.clubId
     });
+    return newMember;
   }
 
   /* ================= RBAC PERMISSIONS ================= */
 
-  // Super Admin: President & Vice-President
-  isSuperAdmin() {
-    const role = this.getCurrentUser()?.role;
-    return role === ROLES.PRESIDENT || role === ROLES.VICE_PRESIDENT;
+  isPlatformSuperAdmin() {
+    const user = this.getCurrentUser();
+    return user?.role === ROLES.SUPERADMIN || user?.isSuperAdmin === true;
   }
 
-  // Secretariat & HR Management
+  isExecutiveBoard() {
+    const role = this.getCurrentUser()?.role;
+    return this.isPlatformSuperAdmin() || [ROLES.PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETAIRE, ROLES.PROTOCOLE].includes(role);
+  }
+
   canManageHR() {
     const role = this.getCurrentUser()?.role;
-    return this.isSuperAdmin() || role === ROLES.SECRETAIRE;
+    return this.isPlatformSuperAdmin() || [ROLES.PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETAIRE].includes(role);
   }
 
-  // Protocole: Sanctions & Discipline
   canManageProtocole() {
     const role = this.getCurrentUser()?.role;
-    return this.isSuperAdmin() || role === ROLES.PROTOCOLE;
+    return this.isPlatformSuperAdmin() || [ROLES.PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.PROTOCOLE].includes(role);
   }
 
-  // Can Create / Edit Action
   canManageAction(commissionId) {
-    if (this.isSuperAdmin()) return true;
+    if (this.isPlatformSuperAdmin() || this.getCurrentUser()?.role === ROLES.PRESIDENT || this.getCurrentUser()?.role === ROLES.VICE_PRESIDENT) return true;
     const user = this.getCurrentUser();
     if (!user) return false;
     
-    // Chef or Co-Chef of this commission
     if ((user.role === ROLES.CHEF_COMMISSION || user.role === ROLES.CO_CHEF) && user.commissionId === commissionId) {
       return true;
     }
-    // Représentant for seminars
     if (user.role === ROLES.REPRESENTANT && commissionId === 'comm_seminaires') {
       return true;
     }
     return false;
   }
 
-  // Can Create / Edit Task
   canManageTask(commissionId) {
     return this.canManageAction(commissionId) || this.canManageHR();
   }
 
-  // Can Post Official Announcement
   canPostAnnouncement() {
-    const role = this.getCurrentUser()?.role;
-    return this.isSuperAdmin() || role === ROLES.SECRETAIRE || role === ROLES.PROTOCOLE || role === ROLES.CHEF_COMMISSION;
+    return this.isExecutiveBoard();
   }
 
-  // Can Mark specific task complete
   canCompleteTask(task) {
-    if (this.isSuperAdmin()) return true;
+    if (this.isExecutiveBoard()) return true;
     const user = this.getCurrentUser();
     if (!user) return false;
-    // If assigned to user
     if (task.assignedTo && task.assignedTo.includes(user.id)) return true;
-    // If chef of the commission
     if (user.role === ROLES.CHEF_COMMISSION || user.role === ROLES.CO_CHEF) return true;
     return false;
   }

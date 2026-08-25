@@ -2,102 +2,267 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // =========================================================================
+    // GLOBAL RBAC & MULTI-TENANT HELPER FUNCTIONS
+    // =========================================================================
+
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function getUserRole(clubId) {
-      return get(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid)).data.role;
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.isSuperAdmin == true ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSuperAdmin == true)
+      );
     }
 
-    function isExecutiveBoard(clubId) {
-      let role = getUserRole(clubId);
-      return role in ['president', 'vice_president', 'secretaire', 'protocole'];
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isUserActive() {
+      return isAuthenticated() && getUserData().status == 'active';
+    }
+
+    function isClubActive(clubId) {
+      return exists(/databases/$(database)/documents/clubs/$(clubId)) &&
+        get(/databases/$(database)/documents/clubs/$(clubId)).data.status == 'active';
     }
 
     function isClubMember(clubId) {
-      return exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid));
+      return isAuthenticated() && isUserActive() && getUserData().clubId == clubId;
     }
 
-    // Clubs Collection
+    function getUserRole(clubId) {
+      return isClubMember(clubId) ? getUserData().role : 'guest';
+    }
+
+    function isPresident(clubId) {
+      return isSuperAdmin() || (isClubMember(clubId) && getUserRole(clubId) == 'president');
+    }
+
+    function isVicePresident(clubId) {
+      return isSuperAdmin() || (isClubMember(clubId) && getUserRole(clubId) in ['president', 'vice_president']);
+    }
+
+    function isSecretary(clubId) {
+      return isSuperAdmin() || (isClubMember(clubId) && getUserRole(clubId) in ['president', 'vice_president', 'secretaire']);
+    }
+
+    function isProtocol(clubId) {
+      return isSuperAdmin() || (isClubMember(clubId) && getUserRole(clubId) in ['president', 'vice_president', 'protocole']);
+    }
+
+    function isExecutiveBoard(clubId) {
+      return isSuperAdmin() || (isClubMember(clubId) && getUserRole(clubId) in ['president', 'vice_president', 'secretaire', 'protocole']);
+    }
+
+    function isCommissionHead(clubId, commissionId) {
+      return isExecutiveBoard(clubId) || (
+        isClubMember(clubId) &&
+        exists(/databases/$(database)/documents/clubs/$(clubId)/commissions/$(commissionId)) &&
+        (get(/databases/$(database)/documents/clubs/$(clubId)/commissions/$(commissionId)).data.chefUid == request.auth.uid ||
+         get(/databases/$(database)/documents/clubs/$(clubId)/commissions/$(commissionId)).data.coChefUid == request.auth.uid ||
+         get(/databases/$(database)/documents/clubs/$(clubId)/commissions/$(commissionId)).data.headIds.hasAny([request.auth.uid]))
+      );
+    }
+
+    // =========================================================================
+    // 1. CLUBS COLLECTION (MULTI-TENANT ROOTS)
+    // =========================================================================
     match /clubs/{clubId} {
-      allow read: if isAuthenticated() && isClubMember(clubId);
-      allow write: if isAuthenticated() && isExecutiveBoard(clubId);
+      // Any authenticated user can read active clubs (e.g. for registration dropdown).
+      // Super Admin and Members can read their full club data.
+      allow read: if isSuperAdmin() || 
+                     (isAuthenticated() && (resource.data.status == 'active' || isClubMember(clubId)));
 
-      // Members Subcollection
-      match /members/{userId} {
-        allow read: if isAuthenticated() && isClubMember(clubId);
-        allow write: if isAuthenticated() && isExecutiveBoard(clubId);
-      }
+      // New Club creation by a President passes status 'pending_superadmin'
+      allow create: if isSuperAdmin() || (
+        isAuthenticated() &&
+        request.resource.data.status == 'pending_superadmin' &&
+        request.resource.data.presidentUid == request.auth.uid
+      );
 
-      // Channels Subcollection
-      match /channels/{channelId} {
-        allow read: if isAuthenticated() && isClubMember(clubId);
-        // Announcements channels: Only Executive Board can create/update
-        // Commission / Task channels: Chefs & Board can create/manage
-        allow write: if isAuthenticated() && (
-          isExecutiveBoard(clubId) || 
-          getUserRole(clubId) in ['chef_commission', 'co_chef', 'representant']
-        );
+      // Only Super Admin or President can update club details
+      allow update: if isSuperAdmin() || (
+        isPresident(clubId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'district', 'logoUrl', 'description', 'sponsorRotaryClub'])
+      );
 
-        // Messages inside Channel
-        match /messages/{messageId} {
-          allow read: if isAuthenticated() && isClubMember(clubId);
-          
-          // Writing messages:
-          // In 'announcements' channel: Only Executive Board can post messages
-          // In other channels: Any club member can write messages
-          allow create: if isAuthenticated() && isClubMember(clubId) && (
-            get(/databases/$(database)/documents/clubs/$(clubId)/channels/$(channelId)).data.type != 'announcements' ||
-            isExecutiveBoard(clubId)
-          );
+      // Only Super Admin can delete or suspend clubs
+      allow delete: if isSuperAdmin();
 
-          // Updating reactions: Any member can update emoji reactions
-          allow update: if isAuthenticated() && isClubMember(clubId) && (
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) ||
-            resource.data.senderId == request.auth.uid ||
-            isExecutiveBoard(clubId)
-          );
+      // =======================================================================
+      // 2. COMMISSIONS & NESTED ACTIONS & TASKS
+      // =======================================================================
+      match /commissions/{commissionId} {
+        allow read: if isSuperAdmin() || isClubMember(clubId);
+        allow create, update, delete: if isExecutiveBoard(clubId);
 
-          allow delete: if isAuthenticated() && (
-            resource.data.senderId == request.auth.uid ||
-            isExecutiveBoard(clubId)
-          );
+        // Actions inside Commission
+        match /actions/{actionId} {
+          allow read: if isSuperAdmin() || isClubMember(clubId);
+          allow create, update, delete: if isCommissionHead(clubId, commissionId);
+
+          // Tasks inside Action
+          match /tasks/{taskId} {
+            allow read: if isSuperAdmin() || isClubMember(clubId);
+            allow create, delete: if isCommissionHead(clubId, commissionId);
+            
+            // Allow assigned members to toggle task status ('faite'/'non_faite')
+            // Allow Chefs to toggle flagReview or priority
+            allow update: if isCommissionHead(clubId, commissionId) || (
+              isClubMember(clubId) &&
+              resource.data.assignedTo.hasAny([request.auth.uid]) &&
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'completedAt'])
+            );
+          }
         }
       }
+    }
 
-      // Task Submissions Subcollection
-      match /task_submissions/{submissionId} {
-        allow read: if isAuthenticated() && isClubMember(clubId);
-        // Assigned members can submit deliverables
-        allow create: if isAuthenticated() && isClubMember(clubId);
-        // Only Commission Chef or Board can validate submission
+    // =========================================================================
+    // 3. USERS COLLECTION (MEMBERS DIRECTORY & RH)
+    // =========================================================================
+    match /users/{uid} {
+      // SuperAdmin, Self, or Executive Board of the same club can read user profile
+      allow read: if isSuperAdmin() || 
+                     (isAuthenticated() && request.auth.uid == uid) || 
+                     (isAuthenticated() && resource.data.clubId == getUserData().clubId && isExecutiveBoard(resource.data.clubId));
+
+      // User creates profile on registration with pending status
+      allow create: if isAuthenticated() && request.auth.uid == uid &&
+                       request.resource.data.status in ['pending_superadmin', 'pending_president'];
+
+      // Self can update contact info; Secretary & President can update roles, status, strikes
+      allow update: if isSuperAdmin() || 
+                       (isAuthenticated() && request.auth.uid == uid &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'phoneNumber', 'photoURL', 'birthDate'])) ||
+                       (isAuthenticated() && resource.data.clubId == getUserData().clubId && isSecretary(resource.data.clubId) &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'commissionIds', 'status', 'strikesCount', 'approvedBy', 'approvedAt', 'history']));
+
+      allow delete: if isSuperAdmin() || (isAuthenticated() && isPresident(resource.data.clubId));
+    }
+
+    // =========================================================================
+    // 4. CHANNELS & REALTIME MESSAGES (WITH VISIO MEET)
+    // =========================================================================
+    match /channels/{channelId} {
+      allow read: if isSuperAdmin() || (isAuthenticated() && resource.data.clubId == getUserData().clubId);
+
+      // SuperAdmin or Executive Board can create channels; Chefs can create task sub-groups
+      allow create: if isSuperAdmin() || (
+        isAuthenticated() && (
+          isExecutiveBoard(request.resource.data.clubId) ||
+          (getUserRole(request.resource.data.clubId) in ['chef_commission', 'co_chef'] && request.resource.data.type == 'task_custom')
+        )
+      );
+
+      allow update, delete: if isSuperAdmin() || (
+        isAuthenticated() && (
+          isExecutiveBoard(resource.data.clubId) ||
+          (getUserRole(resource.data.clubId) in ['chef_commission', 'co_chef'] && resource.data.type == 'task_custom' && resource.data.createdById == request.auth.uid)
+        )
+      );
+
+      // Messages in Channel
+      match /messages/{messageId} {
+        allow read: if isSuperAdmin() || (
+          isAuthenticated() && get(/databases/$(database)/documents/channels/$(channelId)).data.clubId == getUserData().clubId
+        );
+
+        // In Announcements channel: Only Executive Board can post messages
+        // In other channels: Any club member can write messages
+        allow create: if isAuthenticated() && (
+          get(/databases/$(database)/documents/channels/$(channelId)).data.clubId == getUserData().clubId && (
+            get(/databases/$(database)/documents/channels/$(channelId)).data.type != 'announcements' ||
+            isExecutiveBoard(get(/databases/$(database)/documents/channels/$(channelId)).data.clubId)
+          )
+        );
+
+        // Updating reactions: Any club member can add emojis
+        // Updating text: Message author only
         allow update: if isAuthenticated() && (
-          isExecutiveBoard(clubId) ||
-          getUserRole(clubId) in ['chef_commission', 'co_chef'] ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) ||
+          resource.data.senderId == request.auth.uid ||
+          isExecutiveBoard(get(/databases/$(database)/documents/channels/$(channelId)).data.clubId)
+        );
+
+        allow delete: if isSuperAdmin() ||
+                         resource.data.senderId == request.auth.uid ||
+                         isExecutiveBoard(get(/databases/$(database)/documents/channels/$(channelId)).data.clubId);
+      }
+    }
+
+    // =========================================================================
+    // 5. SANCTIONS & DISCIPLINE (PROTOCOLE ENGINE)
+    // =========================================================================
+    match /sanctions/{sanctionId} {
+      // Member can read their own sanction; Protocol, Secretary and President can read all sanctions
+      allow read: if isSuperAdmin() || (
+        isAuthenticated() && resource.data.clubId == getUserData().clubId && (
+          resource.data.userId == request.auth.uid ||
+          isProtocol(resource.data.clubId) ||
+          isSecretary(resource.data.clubId)
+        )
+      );
+
+      // Protocol and President can create, approve, reject, or excuse sanctions
+      allow create: if isSuperAdmin() || (
+        isAuthenticated() && isProtocol(request.resource.data.clubId)
+      );
+
+      allow update: if isSuperAdmin() || (
+        isAuthenticated() && isProtocol(resource.data.clubId)
+      );
+
+      allow delete: if isSuperAdmin() || (
+        isAuthenticated() && isPresident(resource.data.clubId)
+      );
+    }
+
+    // =========================================================================
+    // 6. TASK SUBMISSIONS & DELIVERABLES WORKSPACE
+    // =========================================================================
+    match /task_submissions/{submissionId} {
+      allow read: if isSuperAdmin() || (
+        isAuthenticated() && resource.data.clubId == getUserData().clubId
+      );
+
+      // Assigned members can submit deliverables
+      allow create: if isAuthenticated() && 
+                       request.resource.data.clubId == getUserData().clubId &&
+                       request.resource.data.submittedBy.hasAny([request.auth.uid]);
+
+      // Commission Chefs and Board can validate; Submitter can update text/files
+      allow update: if isSuperAdmin() || (
+        isAuthenticated() && resource.data.clubId == getUserData().clubId && (
+          isCommissionHead(resource.data.clubId, resource.data.commissionId) ||
           resource.data.submittedBy.hasAny([request.auth.uid])
-        );
-        allow delete: if isAuthenticated() && isExecutiveBoard(clubId);
-      }
+        )
+      );
 
-      // Events & Schedule
-      match /events_schedule/{eventId} {
-        allow read: if isAuthenticated() && isClubMember(clubId);
-        allow write: if isAuthenticated() && (
-          isExecutiveBoard(clubId) ||
-          getUserRole(clubId) in ['chef_commission', 'representant']
-        );
-      }
+      allow delete: if isSuperAdmin() || (
+        isAuthenticated() && isExecutiveBoard(resource.data.clubId)
+      );
+    }
 
-      // Sanctions
-      match /sanctions/{sanctionId} {
-        allow read: if isAuthenticated() && isClubMember(clubId);
-        allow write: if isAuthenticated() && (
-          isExecutiveBoard(clubId) ||
-          getUserRole(clubId) == 'protocole'
-        );
-      }
+    // =========================================================================
+    // 7. EVENTS & CALENDAR SCHEDULE
+    // =========================================================================
+    match /events_schedule/{eventId} {
+      allow read: if isSuperAdmin() || (
+        isAuthenticated() && resource.data.clubId == getUserData().clubId
+      );
+
+      allow create, update, delete: if isSuperAdmin() || (
+        isAuthenticated() && (
+          isExecutiveBoard(request.resource.data.clubId) ||
+          getUserRole(request.resource.data.clubId) in ['chef_commission', 'representant']
+        )
+      );
     }
   }
 }

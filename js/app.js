@@ -294,6 +294,78 @@ class AppController {
     const profileStrikes = document.getElementById('profile-user-strikes');
     if (profileStrikes) profileStrikes.textContent = `${user.strikesCount || 0} Strike(s)`;
 
+    // Multi-tenant Approval Sections
+    const approvalSection = document.getElementById('settings-approval-portal');
+    if (approvalSection) {
+      let portalHtml = '';
+
+      // 1. Super Admin Platform Approvals (Pending Clubs)
+      if (window.authManager.isPlatformSuperAdmin()) {
+        const pendingClubs = window.dbStore.getPendingClubs();
+        portalHtml += `
+          <div class="interact-card" style="border:1px solid #F7A81B; margin-bottom:14px; background:rgba(247, 168, 27, 0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <h4 style="color:#F7A81B; margin:0; font-size:0.95rem;">👑 Portail Super Admin : Clubs en Attente (${pendingClubs.length})</h4>
+            </div>
+            ${pendingClubs.length === 0 ? `
+              <p style="color:var(--text-muted); font-size:0.8rem; margin:0;">Aucun nouveau club en attente de validation plateforme.</p>
+            ` : `
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                ${pendingClubs.map(pc => `
+                  <div style="display:flex; justify-content:space-between; align-items:center; background:#131B2E; padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                    <div>
+                      <div style="font-weight:800; color:#FFF; font-size:0.88rem;">${pc.name} (${pc.district})</div>
+                      <div style="font-size:0.74rem; color:var(--text-muted);">Président : ${pc.presidentName} (${pc.presidentEmail})</div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                      <button class="btn-primary" style="padding:4px 10px; font-size:0.72rem; background:linear-gradient(135deg, #34C759, #28A745);" onclick="window.app.handleSuperAdminApproveClub('${pc.id}')">
+                        ✓ Activer Club
+                      </button>
+                      <button class="btn-secondary compact" style="padding:4px 8px; font-size:0.72rem; color:#FF3B30;" onclick="window.app.handleSuperAdminRejectClub('${pc.id}')">
+                        ✕ Rejeter
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        `;
+      }
+
+      // 2. President Club Member Approvals
+      if (user.role === 'president' || user.role === 'vice_president' || user.role === 'secretaire') {
+        const pendingMembers = window.dbStore.getPendingMembers(user.clubId);
+        if (pendingMembers.length > 0) {
+          portalHtml += `
+            <div class="interact-card" style="border:1px solid var(--accent-cyan); margin-bottom:14px; background:rgba(0, 240, 255, 0.08);">
+              <h4 style="color:var(--accent-cyan); margin:0 0 8px 0; font-size:0.95rem;">👥 Demandes d'adhésion au Club (${pendingMembers.length})</h4>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                ${pendingMembers.map(pm => `
+                  <div style="display:flex; justify-content:space-between; align-items:center; background:#131B2E; padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                    <div>
+                      <div style="font-weight:800; color:#FFF; font-size:0.88rem;">${pm.displayName}</div>
+                      <div style="font-size:0.74rem; color:var(--text-muted);">${pm.email} ${pm.phoneNumber ? `• 📞 ${pm.phoneNumber}` : ''}</div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                      <button class="btn-primary" style="padding:4px 10px; font-size:0.72rem; background:linear-gradient(135deg, #34C759, #28A745);" onclick="window.app.handlePresidentApproveMember('${pm.id}')">
+                        ✓ Accepter Membre
+                      </button>
+                      <button class="btn-secondary compact" style="padding:4px 8px; font-size:0.72rem; color:#FF3B30;" onclick="window.app.handlePresidentRejectMember('${pm.id}')">
+                        ✕ Rejeter
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      approvalSection.innerHTML = portalHtml;
+    }
+
     // Role Switcher Select
     const switcher = document.getElementById('role-switcher-select');
     if (switcher) {
@@ -310,6 +382,193 @@ class AppController {
     if (apiKeyInput && window.aiAssistant) {
       apiKeyInput.value = window.aiAssistant.apiKey || '';
     }
+  }
+
+  /* ================= MULTI-TENANT REGISTRATION & APPROVAL ACTIONS ================= */
+  openRegistrationModal() {
+    const activeClubs = window.dbStore.getActiveClubs();
+    let clubOptions = '';
+    activeClubs.forEach(c => {
+      clubOptions += `<option value="${c.id}">${c.name} (${c.district})</option>`;
+    });
+
+    const modalBody = `
+      <div style="display:flex; gap:8px; margin-bottom:16px; background:#0B1220; padding:4px; border-radius:100px;">
+        <button type="button" class="cal-view-btn active" id="btn-reg-mode-join" onclick="window.app.toggleRegFormMode('join')">
+          👤 Rejoindre un Club
+        </button>
+        <button type="button" class="cal-view-btn" id="btn-reg-mode-create" onclick="window.app.toggleRegFormMode('create')">
+          👑 Créer un Club (Président)
+        </button>
+      </div>
+
+      <!-- Form Mode 1: Join Club -->
+      <form id="form-reg-join" onsubmit="window.app.handleJoinClubRegistration(event)">
+        <div class="form-group">
+          <label class="form-label">Club Interact Actif *</label>
+          <select name="clubId" class="form-select" required>
+            ${clubOptions || '<option value="club_carthage_01">Interact Club Carthage (District 9010)</option>'}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom et Prénom *</label>
+          <input type="text" name="displayName" class="form-input" placeholder="Ex: Yassine Ben Salem" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Adresse Email *</label>
+          <input type="email" name="email" class="form-input" placeholder="membre@interact.org" required />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label class="form-label">Téléphone / WhatsApp</label>
+            <input type="tel" name="phoneNumber" class="form-input" placeholder="+216 98 123 456" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date de Naissance</label>
+            <input type="date" name="birthDate" class="form-input" />
+          </div>
+        </div>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin:8px 0 14px 0;">
+          ℹ️ Votre compte sera transmis au Président du club pour validation officielle.
+        </p>
+        <button type="submit" class="btn-primary" style="width:100%;">
+          📨 Envoyer la Demande d'Adhésion
+        </button>
+      </form>
+
+      <!-- Form Mode 2: Create Club -->
+      <form id="form-reg-create" style="display:none;" onsubmit="window.app.handleCreateClubRegistration(event)">
+        <h4 style="color:#F7A81B; margin:0 0 10px 0; font-size:0.85rem; text-transform:uppercase;">Informations du Nouveau Club</h4>
+        <div class="form-group">
+          <label class="form-label">Nom Officiel du Club *</label>
+          <input type="text" name="clubName" class="form-input" placeholder="Ex: Interact Club La Marsa" required />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label class="form-label">District Rotary</label>
+            <input type="text" name="district" class="form-input" value="District 9010" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rotary Parrain</label>
+            <input type="text" name="sponsorRotaryClub" class="form-input" placeholder="Rotary Club Parrain" />
+          </div>
+        </div>
+        <h4 style="color:#F7A81B; margin:12px 0 10px 0; font-size:0.85rem; text-transform:uppercase;">Coordonnées du Président</h4>
+        <div class="form-group">
+          <label class="form-label">Nom et Prénom du Président *</label>
+          <input type="text" name="presName" class="form-input" placeholder="Ex: Youssef Mahjoub" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Officiel du Président *</label>
+          <input type="email" name="presEmail" class="form-input" placeholder="president@interact.org" required />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label class="form-label">Téléphone / WhatsApp</label>
+            <input type="tel" name="presPhone" class="form-input" placeholder="+216 98 000 000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date de Naissance</label>
+            <input type="date" name="presBirth" class="form-input" />
+          </div>
+        </div>
+        <div class="notice-box" style="margin:10px 0 14px 0; font-size:0.75rem; color:#00F0FF; background:rgba(0,240,255,0.08); padding:8px 12px; border-radius:8px;">
+          🛡️ La création d'un nouveau club est soumise à la validation par le Super Admin de la plateforme.
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;">
+          🚀 Créer le Club & Soumettre au Super Admin
+        </button>
+      </form>
+    `;
+
+    this.openModal('📝 Inscription & Création Multi-Tenant', modalBody);
+  }
+
+  toggleRegFormMode(mode) {
+    const joinForm = document.getElementById('form-reg-join');
+    const createForm = document.getElementById('form-reg-create');
+    const joinBtn = document.getElementById('btn-reg-mode-join');
+    const createBtn = document.getElementById('btn-reg-mode-create');
+
+    if (mode === 'join') {
+      if (joinForm) joinForm.style.display = 'block';
+      if (createForm) createForm.style.display = 'none';
+      if (joinBtn) joinBtn.classList.add('active');
+      if (createBtn) createBtn.classList.remove('active');
+    } else {
+      if (joinForm) joinForm.style.display = 'none';
+      if (createForm) createForm.style.display = 'block';
+      if (joinBtn) joinBtn.classList.remove('active');
+      if (createBtn) createBtn.classList.add('active');
+    }
+  }
+
+  handleJoinClubRegistration(event) {
+    event.preventDefault();
+    const form = event.target;
+    const clubId = form.clubId.value;
+    const displayName = form.displayName.value.trim();
+    const email = form.email.value.trim();
+    const phoneNumber = form.phoneNumber.value.trim();
+    const birthDate = form.birthDate.value;
+
+    window.authManager.joinExistingClub({
+      clubId,
+      displayName,
+      email,
+      phoneNumber,
+      birthDate,
+      role: 'membre'
+    });
+
+    this.closeModal();
+    this.showToast('Demande d\'adhésion envoyée au Président du club ! 📨', 'success');
+  }
+
+  handleCreateClubRegistration(event) {
+    event.preventDefault();
+    const form = event.target;
+    const clubName = form.clubName.value.trim();
+    const district = form.district.value.trim();
+    const sponsorRotaryClub = form.sponsorRotaryClub.value.trim();
+    const presName = form.presName.value.trim();
+    const presEmail = form.presEmail.value.trim();
+    const presPhone = form.presPhone.value.trim();
+    const presBirth = form.presBirth.value;
+
+    window.authManager.registerNewClub(
+      { name: clubName, district, sponsorRotaryClub },
+      { displayName: presName, email: presEmail, phoneNumber: presPhone, birthDate: presBirth }
+    );
+
+    this.closeModal();
+    this.showToast('Club créé avec succès ! En attente d\'approbation Super Admin. ⏳', 'warning');
+  }
+
+  handleSuperAdminApproveClub(clubId) {
+    window.dbStore.approveClub(clubId);
+    this.showToast('Club activé sur la plateforme avec succès ! 👑', 'success');
+    this.renderSettings();
+  }
+
+  handleSuperAdminRejectClub(clubId) {
+    window.dbStore.rejectClub(clubId);
+    this.showToast('Création de club rejetée.', 'error');
+    this.renderSettings();
+  }
+
+  handlePresidentApproveMember(userId) {
+    const user = window.authManager.getCurrentUser();
+    window.dbStore.approveMember(userId, user.clubId);
+    this.showToast('Membre validé et activé au sein du club ! ✓', 'success');
+    this.renderSettings();
+  }
+
+  handlePresidentRejectMember(userId) {
+    const user = window.authManager.getCurrentUser();
+    window.dbStore.rejectMember(userId, user.clubId);
+    this.showToast('Demande d\'adhésion refusée.', 'error');
+    this.renderSettings();
   }
 
   openNewAnnouncementModal() {

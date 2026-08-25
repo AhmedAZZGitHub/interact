@@ -2,7 +2,7 @@
  * ==========================================================================
  * PROTOCOLE & DISCIPLINE ENGINE (AUTOMATIC SANCTIONS WATCHDOG)
  * Automatic delay detection, strikes count, sanctions moderation & HR matrix.
- * Structured Glassmorphism Sanctions & HR Table
+ * Structured Glassmorphism Sanctions & HR Table with Direct WhatsApp Triggers
  * ==========================================================================
  */
 
@@ -35,7 +35,8 @@ class ProtocolManager {
 
   /**
    * Automatic Deadline Watchdog
-   * Checks every uncompleted task: if currentTime > task.deadline, generates a sanction.
+   * Checks every uncompleted task: if currentTime > task.deadline, generates a sanction
+   * UNLESS the commission chef has activated `flagReview` to freeze sanctions.
    */
   runDeadlinesWatchdog(notify = false) {
     if (!window.dbStore) return 0;
@@ -57,6 +58,10 @@ class ProtocolManager {
 
         Object.keys(tasks).forEach(taskId => {
           const task = tasks[taskId];
+
+          // If task has flagReview active, skip automatic sanctioning (frozen by Chef)
+          if (task.flagReview) return;
+
           const deadline = new Date(task.deadline);
 
           // Overdue condition
@@ -114,7 +119,7 @@ class ProtocolManager {
     const club = window.dbStore.getClub();
     const sanctions = club.sanctions || {};
     const members = club.members || {};
-    const canModerate = window.authManager.canManageProtocole();
+    const canModerate = window.authManager?.canManageProtocole?.();
 
     const sanctionKeys = Object.keys(sanctions);
     if (sanctionKeys.length === 0) {
@@ -130,7 +135,7 @@ class ProtocolManager {
     const sortedSanctions = Object.values(sanctions).sort((a, b) => {
       if (a.status === 'active' && b.status !== 'active') return -1;
       if (a.status !== 'active' && b.status === 'active') return 1;
-      return new Date(b.date) - new Date(a.date);
+      return new Date(b.date || 0) - new Date(a.date || 0);
     });
 
     let html = '';
@@ -167,7 +172,7 @@ class ProtocolManager {
           </p>
 
           <div class="sanction-meta-row">
-            <span class="sanction-date-tag">📅 ${new Date(s.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+            <span class="sanction-date-tag">📅 ${new Date(s.date || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
             <span class="sanction-delay-tag">⏱️ Retard : <strong>${s.delayHours || 0}h</strong></span>
           </div>
 
@@ -200,12 +205,12 @@ class ProtocolManager {
     const club = window.dbStore.getClub();
     const members = club.members || {};
     const commissions = club.commissions || {};
-    const canManageHR = window.authManager.canManageHR();
+    const canManageHR = window.authManager?.canManageHR?.();
 
     let html = '';
     Object.values(members).forEach(m => {
       const comm = commissions[m.commissionId];
-      const commName = comm ? comm.info?.name : 'Direction';
+      const commName = comm ? comm.info?.name : 'Direction Club';
       const strikes = m.strikesCount || 0;
 
       let strikesBadge = '';
@@ -214,6 +219,10 @@ class ProtocolManager {
       } else {
         strikesBadge = `<span class="status-tag urgent">⚡ ${strikes} Strike${strikes > 1 ? 's' : ''}</span>`;
       }
+
+      // WhatsApp direct link
+      const phoneDigits = (m.phoneNumber || '').replace(/[^0-9]/g, '');
+      const waLink = phoneDigits ? `https://wa.me/${phoneDigits}` : '#';
 
       html += `
         <div class="interact-card hr-member-card">
@@ -225,14 +234,27 @@ class ProtocolManager {
                 <span class="hr-member-role">${window.ROLE_LABELS[m.role] || m.role}</span>
                 <span class="hr-member-comm">📁 ${commName}</span>
               </div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">
+                ${m.email} ${m.birthDate ? `• 🎂 ${m.birthDate}` : ''}
+              </div>
             </div>
           </div>
 
-          <div class="hr-member-right">
+          <div class="hr-member-right" style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
             ${strikesBadge}
+            ${m.phoneNumber ? `
+              <div style="display:flex; gap:6px;">
+                <a href="tel:${m.phoneNumber}" class="btn-secondary compact" style="text-decoration:none; font-size:0.72rem; padding:3px 8px; color:var(--accent-cyan);">
+                  📞 ${m.phoneNumber}
+                </a>
+                <a href="${waLink}" target="_blank" class="btn-secondary compact" style="text-decoration:none; font-size:0.72rem; padding:3px 8px; color:#34C759;">
+                  💬 WhatsApp
+                </a>
+              </div>
+            ` : ''}
             ${canManageHR ? `
-              <button class="btn-secondary compact" onclick="window.protocolManager.openEditMemberModal('${m.id}')">
-                Modifier Rôle
+              <button class="btn-secondary compact" style="margin-top:2px;" onclick="window.protocolManager.openEditMemberModal('${m.id}')">
+                ✏️ Modifier Rôle
               </button>
             ` : ''}
           </div>
@@ -318,16 +340,16 @@ class ProtocolManager {
           <label class="form-label">Gradation</label>
           <select name="grade" class="form-select">
             <option value="light">⚠️ Sanction Légère (Avertissement / 1 Strike)</option>
-            <option value="severe">⚡ Sanction Sévère (Manquement grave)</option>
+            <option value="severe">⚡ Sanction Sévère (2 Strikes / Convocation Bureau)</option>
           </select>
         </div>
         <button type="submit" class="btn-primary" style="margin-top:12px; background:linear-gradient(135deg, #FF3B30, #D90429); color:#FFF;">
-          ⚡ Appliquer la Sanction Protocole
+          ⚡ Appliquer la Sanction Officielle
         </button>
       </form>
     `;
 
-    window.app.openModal('⚖️ Nouvelle Sanction Protocole', modalBody);
+    window.app.openModal('⚖️ Nouvelle Sanction Disciplinaire', modalBody);
   }
 
   handleManualSanction(event) {
@@ -338,76 +360,75 @@ class ProtocolManager {
     const grade = form.grade.value;
 
     if (!userId || !reason) {
-      window.app.showToast('Veuillez renseigner tous les champs.', 'error');
+      window.app.showToast('Veuillez remplir tous les champs obligatoires.', 'error');
       return;
     }
 
     window.dbStore.addSanction({
       userId,
-      taskId: 'manual_' + Date.now(),
-      actionTitle: 'Protocole Général & Discipline',
       reason,
       grade,
-      delayHours: 0
+      delayHours: 0,
+      actionTitle: 'Protocole & Discipline'
     });
 
     window.app.closeModal();
-    window.app.showToast('Sanction enregistrée avec succès.', 'error');
+    window.app.showToast('Sanction disciplinaire enregistrée au registre officiel.', 'warning');
   }
 
   openEditMemberModal(userId) {
     const club = window.dbStore.getClub();
     const member = club.members?.[userId];
-    const commissions = club.commissions || {};
     if (!member) return;
 
-    let roleOptions = '';
-    Object.keys(window.ROLES).forEach(k => {
-      const rVal = window.ROLES[k];
-      const isSelected = member.role === rVal ? 'selected' : '';
-      roleOptions += `<option value="${rVal}" ${isSelected}>${window.ROLE_LABELS[rVal] || rVal}</option>`;
+    const commissions = club.commissions || {};
+    let commOptions = `<option value="comm_direction">-- Direction / Bureau Exécutif --</option>`;
+    Object.keys(commissions).forEach(cId => {
+      commOptions += `<option value="${cId}" ${member.commissionId === cId ? 'selected' : ''}>${commissions[cId].info.name}</option>`;
     });
 
-    let commOptions = `<option value="">-- Aucune commission --</option>`;
-    Object.keys(commissions).forEach(cId => {
-      const isSelected = member.commissionId === cId ? 'selected' : '';
-      commOptions += `<option value="${cId}" ${isSelected}>${commissions[cId].info?.name || cId}</option>`;
+    let roleOptions = '';
+    Object.keys(window.ROLES).forEach(rKey => {
+      const rVal = window.ROLES[rKey];
+      roleOptions += `<option value="${rVal}" ${member.role === rVal ? 'selected' : ''}>${window.ROLE_LABELS[rVal] || rVal}</option>`;
     });
 
     const modalBody = `
-      <form id="form-edit-member-hr" onsubmit="window.protocolManager.handleEditMemberHR(event, '${userId}')">
+      <form id="form-edit-member-role" onsubmit="window.protocolManager.handleSaveMemberRole(event, '${userId}')">
         <div class="form-group">
           <label class="form-label">Membre</label>
-          <input type="text" class="form-input" value="${member.displayName} (${member.email})" disabled />
+          <input type="text" class="form-input" value="${member.displayName}" disabled />
         </div>
         <div class="form-group">
-          <label class="form-label">Attribution du Rôle *</label>
-          <select name="role" class="form-select">
+          <label class="form-label">Rôle Officiel *</label>
+          <select name="newRole" class="form-select">
             ${roleOptions}
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Commission assignée</label>
-          <select name="commissionId" class="form-select">
+          <label class="form-label">Commission de Rattachement</label>
+          <select name="newCommId" class="form-select">
             ${commOptions}
           </select>
         </div>
-        <button type="submit" class="btn-primary" style="margin-top:12px;">Sauvegarder les Droits RH</button>
+        <button type="submit" class="btn-primary" style="margin-top:12px;">
+          💾 Enregistrer les Droits RH
+        </button>
       </form>
     `;
 
-    window.app.openModal('📋 Modification Profil & Rôle (RH)', modalBody);
+    window.app.openModal('👥 Gestion RH : Droits & Rôle', modalBody);
   }
 
-  handleEditMemberHR(event, userId) {
+  handleSaveMemberRole(event, userId) {
     event.preventDefault();
     const form = event.target;
-    const newRole = form.role.value;
-    const newComm = form.commissionId.value || null;
+    const newRole = form.newRole.value;
+    const newCommId = form.newCommId.value;
 
-    window.dbStore.updateMemberRole(userId, newRole, newComm);
+    window.dbStore.updateMemberRole(userId, newRole, newCommId);
     window.app.closeModal();
-    window.app.showToast('Droits et rôle du membre mis à jour !', 'success');
+    window.app.showToast('Droits RH et poste mis à jour avec succès.', 'success');
   }
 }
 

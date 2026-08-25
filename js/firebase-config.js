@@ -53,105 +53,156 @@ const DEFAULT_SEED_DATA = {
         motto: "Lead, Connect, Inspire"
       },
       members: {
+        "user_superadmin": {
+          id: "user_superadmin",
+          email: "superadmin@interact-platform.org",
+          displayName: "Super Admin Platform",
+          role: "superadmin",
+          isSuperAdmin: true,
+          phoneNumber: "+216 20 000 000",
+          birthDate: "1998-05-12",
+          commissionId: "comm_direction",
+          dateJoined: "2023-01-01T00:00:00Z",
+          strikesCount: 0,
+          status: "active",
+          history: [{ year: "2023-2026", role: "superadmin", notes: "Administration Globale Plateforme" }]
+        },
         "user_pres": {
           id: "user_pres",
           email: "president@interact-carthage.org",
           displayName: "Youssef Mahjoub",
           role: "president",
+          phoneNumber: "+216 98 111 222",
+          birthDate: "2006-03-15",
           commissionId: "comm_direction",
           dateJoined: "2024-09-01T10:00:00Z",
           strikesCount: 0,
-          avatarUrl: ""
+          status: "active",
+          history: [
+            { year: "2024-2025", role: "vice_president", commissionName: "Direction" },
+            { year: "2025-2026", role: "president", commissionName: "Bureau Exécutif" }
+          ]
         },
         "user_vp": {
           id: "user_vp",
           email: "vp@interact-carthage.org",
           displayName: "Sarra Trabelsi",
           role: "vice_president",
+          phoneNumber: "+216 98 222 333",
+          birthDate: "2006-07-22",
           commissionId: "comm_direction",
           dateJoined: "2024-09-01T10:00:00Z",
           strikesCount: 0,
-          avatarUrl: ""
+          status: "active",
+          history: [
+            { year: "2024-2025", role: "chef_commission", commissionName: "Action Sociale" },
+            { year: "2025-2026", role: "vice_president", commissionName: "Direction" }
+          ]
         },
         "user_sec": {
           id: "user_sec",
           email: "secretaire@interact-carthage.org",
           displayName: "Nour Khemir",
           role: "secretaire",
+          phoneNumber: "+216 98 333 444",
+          birthDate: "2007-01-10",
           commissionId: "comm_direction",
           dateJoined: "2024-09-01T10:00:00Z",
           strikesCount: 0,
-          avatarUrl: ""
+          status: "active",
+          history: [
+            { year: "2025-2026", role: "secretaire", commissionName: "Bureau Exécutif (RH)" }
+          ]
         },
         "user_proto": {
           id: "user_proto",
           email: "protocole@interact-carthage.org",
           displayName: "Aziz Chaabane",
           role: "protocole",
+          phoneNumber: "+216 98 444 555",
+          birthDate: "2006-11-30",
           commissionId: "comm_direction",
           dateJoined: "2024-09-01T10:00:00Z",
           strikesCount: 0,
-          avatarUrl: ""
+          status: "active",
+          history: [
+            { year: "2025-2026", role: "protocole", commissionName: "Discipline & Protocole" }
+          ]
         },
         "user_chef_action": {
           id: "user_chef_action",
           email: "action@interact-carthage.org",
           displayName: "Mehdi Ben Amor",
           role: "chef_commission",
+          phoneNumber: "+216 98 555 666",
+          birthDate: "2006-09-05",
           commissionId: "comm_sociale",
           dateJoined: "2024-10-15T14:00:00Z",
           strikesCount: 0,
-          avatarUrl: ""
+          status: "active",
+          history: [
+            { year: "2025-2026", role: "chef_commission", commissionName: "Action Sociale" }
+          ]
         },
         "user_cochef_action": {
           id: "user_cochef_action",
           email: "cochef@interact-carthage.org",
           displayName: "Ines Ghorbel",
           role: "co_chef",
+          phoneNumber: "+216 98 666 777",
+          birthDate: "2007-04-18",
           commissionId: "comm_sociale",
           dateJoined: "2024-11-01T09:00:00Z",
           strikesCount: 1,
-          avatarUrl: ""
+          status: "active"
         },
         "user_chef_com": {
           id: "user_chef_com",
           email: "com@interact-carthage.org",
           displayName: "Rayan Dridi",
           role: "chef_commission",
+          phoneNumber: "+216 98 777 888",
+          birthDate: "2006-12-02",
           commissionId: "comm_communication",
           dateJoined: "2024-10-20T11:00:00Z",
           strikesCount: 0,
-          avatarUrl: ""
+          status: "active"
         },
         "user_rep": {
           id: "user_rep",
           email: "representant@interact-carthage.org",
           displayName: "Amine Sassi",
           role: "representant",
+          phoneNumber: "+216 98 888 999",
+          birthDate: "2006-08-14",
           commissionId: "comm_seminaires",
           dateJoined: "2024-09-10T15:00:00Z",
           strikesCount: 0,
-          avatarUrl: ""
+          status: "active"
         },
         "user_membre_01": {
           id: "user_membre_01",
           email: "membre@interact-carthage.org",
           displayName: "Kenza Jlassi",
           role: "membre",
+          phoneNumber: "+216 98 000 111",
+          birthDate: "2007-06-25",
           commissionId: "comm_sociale",
           dateJoined: "2025-01-10T12:00:00Z",
           strikesCount: 1,
-          avatarUrl: ""
+          status: "active"
         },
         "user_recrue_01": {
           id: "user_recrue_01",
           email: "recrue@interact-carthage.org",
           displayName: "Omar Fakhfakh",
           role: "recrue",
+          phoneNumber: "+216 98 123 789",
+          birthDate: "2007-09-19",
           commissionId: "comm_sociale",
           dateJoined: "2025-02-01T16:00:00Z",
           strikesCount: 0,
-          avatarUrl: ""
+          status: "active"
         }
       },
       commissions: {
@@ -830,6 +881,207 @@ class DBStore {
 
       this.saveData(this.data);
       return club.sanctions[sanctionId];
+    }
+    return null;
+  }
+
+  /* ================= MULTI-TENANT & APPROVAL WORKFLOW ================= */
+  getAllClubs() {
+    return Object.values(this.data.clubs || {}).map(c => ({
+      id: c.info?.id || 'club',
+      name: c.info?.name || 'Club',
+      district: c.info?.district || 'District 9010',
+      status: c.info?.status || 'active',
+      description: c.info?.description || '',
+      sponsorRotaryClub: c.info?.sponsorRotaryClub || '',
+      logoUrl: c.info?.logoUrl || '',
+      presidentUid: c.info?.presidentUid || '',
+      presidentName: c.info?.presidentName || '',
+      presidentEmail: c.info?.presidentEmail || '',
+      createdAt: c.info?.createdAt || new Date().toISOString()
+    }));
+  }
+
+  getActiveClubs() {
+    return this.getAllClubs().filter(c => c.status === 'active' || !c.status);
+  }
+
+  getPendingClubs() {
+    return this.getAllClubs().filter(c => c.status === 'pending_superadmin');
+  }
+
+  createClub(clubData, presidentData) {
+    const clubId = 'club_' + clubData.name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
+    const presUid = 'user_' + Date.now();
+
+    const newClub = {
+      info: {
+        id: clubId,
+        name: clubData.name,
+        description: clubData.description || "Club Interact",
+        district: clubData.district || "District 9010",
+        sponsorRotaryClub: clubData.sponsorRotaryClub || "Rotary Club Parrain",
+        status: "pending_superadmin",
+        presidentUid: presUid,
+        presidentName: presidentData.displayName,
+        presidentEmail: presidentData.email,
+        createdAt: new Date().toISOString()
+      },
+      members: {
+        [presUid]: {
+          id: presUid,
+          email: presidentData.email,
+          displayName: presidentData.displayName,
+          role: "president",
+          phoneNumber: presidentData.phoneNumber || "",
+          birthDate: presidentData.birthDate || "",
+          commissionId: "comm_direction",
+          status: "pending_superadmin",
+          strikesCount: 0,
+          dateJoined: new Date().toISOString()
+        }
+      },
+      commissions: {
+        "comm_sociale": {
+          info: { id: "comm_sociale", name: "Commission Action Sociale", type: "social", icon: "🤝", chefUid: presUid },
+          actions: {}
+        }
+      },
+      channels: {
+        "chan_announcements": {
+          id: "chan_announcements",
+          name: "📢 Annonces Officielles",
+          type: "announcements",
+          allowedWriters: ["president", "vice_president", "secretaire", "protocole", "superadmin"]
+        }
+      },
+      sanctions: {},
+      announcements: {},
+      events_schedule: {},
+      task_submissions: {}
+    };
+
+    if (!this.data.clubs) this.data.clubs = {};
+    this.data.clubs[clubId] = newClub;
+    this.saveData(this.data);
+    return newClub;
+  }
+
+  approveClub(clubId) {
+    if (this.data.clubs?.[clubId]) {
+      this.data.clubs[clubId].info.status = 'active';
+      const presUid = this.data.clubs[clubId].info.presidentUid;
+      if (presUid && this.data.clubs[clubId].members?.[presUid]) {
+        this.data.clubs[clubId].members[presUid].status = 'active';
+      }
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
+
+  rejectClub(clubId) {
+    if (this.data.clubs?.[clubId]) {
+      this.data.clubs[clubId].info.status = 'rejected';
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
+
+  registerMember(userData) {
+    const clubId = userData.clubId || this.data.activeClubId || "club_carthage_01";
+    const club = this.getClub(clubId);
+    const newUid = 'user_' + Date.now();
+
+    const newMember = {
+      id: newUid,
+      email: userData.email,
+      displayName: userData.displayName,
+      role: userData.role || "membre",
+      phoneNumber: userData.phoneNumber || "",
+      birthDate: userData.birthDate || "",
+      commissionId: userData.commissionId || "comm_sociale",
+      status: "pending_president",
+      strikesCount: 0,
+      dateJoined: new Date().toISOString()
+    };
+
+    if (!club.members) club.members = {};
+    club.members[newUid] = newMember;
+    this.saveData(this.data);
+    return newMember;
+  }
+
+  approveMember(userId, clubId = null) {
+    const club = this.getClub(clubId);
+    if (club.members?.[userId]) {
+      club.members[userId].status = 'active';
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
+
+  rejectMember(userId, clubId = null) {
+    const club = this.getClub(clubId);
+    if (club.members?.[userId]) {
+      delete club.members[userId];
+      this.saveData(this.data);
+      return true;
+    }
+    return false;
+  }
+
+  getPendingMembers(clubId = null) {
+    const members = this.getMembers(clubId);
+    return Object.values(members).filter(m => m.status === 'pending_president');
+  }
+
+  /* ================= PROTOCOLE ARBITRATION & TASK FREEZE ================= */
+  approveSanction(sanctionId, severity = 'sanction_legere', reviewNotes = '', reviewedBy = 'Protocole', clubId = null) {
+    const club = this.getClub(clubId);
+    const s = club.sanctions?.[sanctionId];
+    if (s) {
+      s.status = 'approved';
+      s.severity = severity;
+      s.reviewedBy = reviewedBy;
+      s.reviewNotes = reviewNotes;
+      s.reviewedAt = new Date().toISOString();
+
+      // Add strike to member profile
+      const strikesToAdd = severity === 'sanction_lourde' ? 2 : 1;
+      if (club.members[s.userId]) {
+        club.members[s.userId].strikesCount = (club.members[s.userId].strikesCount || 0) + strikesToAdd;
+      }
+
+      this.saveData(this.data);
+      return s;
+    }
+    return null;
+  }
+
+  rejectSanction(sanctionId, excuseReason = '', reviewedBy = 'Protocole', clubId = null) {
+    const club = this.getClub(clubId);
+    const s = club.sanctions?.[sanctionId];
+    if (s) {
+      s.status = 'excused';
+      s.excuseReason = excuseReason;
+      s.reviewedBy = reviewedBy;
+      s.reviewedAt = new Date().toISOString();
+      this.saveData(this.data);
+      return s;
+    }
+    return null;
+  }
+
+  setTaskFlagReview(commissionId, actionId, taskId, isFlagged = true, clubId = null) {
+    const club = this.getClub(clubId);
+    const task = club.commissions?.[commissionId]?.actions?.[actionId]?.tasks?.[taskId];
+    if (task) {
+      task.flagReview = isFlagged;
+      this.saveData(this.data);
+      return task;
     }
     return null;
   }

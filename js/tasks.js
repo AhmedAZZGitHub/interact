@@ -166,9 +166,11 @@ class TasksManager {
         deliverableBadge = `<span class="status-tag done" style="font-size:0.68rem;">📎 Livrable Validé</span>`;
       } else if (hasSubmissions) {
         deliverableBadge = `<span class="status-tag inprogress" style="font-size:0.68rem;">⏳ Livrable en Attente</span>`;
+      const isChefOrBoard = window.authManager.canManageAction(task.commissionId);
+      let flagReviewBadge = '';
+      if (task.flagReview) {
+        flagReviewBadge = `<span class="status-tag warning" style="font-size:0.68rem; border-color:#F7A81B;">🛡️ Sanction Gelée (Chef Review)</span>`;
       }
-
-      const memberNames = task.assignedMembers.map(m => m.name).join(', ') || 'Non assigné';
 
       html += `
         <div class="interact-card task-card ${task.urgencyClass}" id="task-card-${task.id}">
@@ -182,12 +184,15 @@ class TasksManager {
               title="${canToggle ? 'Valider la tâche' : 'Non autorisé'}"
             />
             
-            <div class="task-card-content" onclick="window.taskWorkspaceManager.openWorkspace('${task.commissionId}', '${task.actionId}', '${task.id}')">
-              <div class="task-card-header-row">
+            <div class="task-card-content">
+              <div class="task-card-header-row" onclick="window.taskWorkspaceManager.openWorkspace('${task.commissionId}', '${task.actionId}', '${task.id}')">
                 <h4 class="task-card-title">${task.title}</h4>
-                <span class="status-tag ${task.badgeClass}">
-                  ${task.badgeText}
-                </span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  ${flagReviewBadge}
+                  <span class="status-tag ${task.badgeClass}">
+                    ${task.badgeText}
+                  </span>
+                </div>
               </div>
 
               <div class="task-card-meta-row">
@@ -202,9 +207,20 @@ class TasksManager {
                 </span>
                 ${deliverableBadge}
                 
-                <span class="btn-link task-open-btn">
+                <span class="btn-link task-open-btn" onclick="window.taskWorkspaceManager.openWorkspace('${task.commissionId}', '${task.actionId}', '${task.id}')">
                   Espace Rendu ➔
                 </span>
+
+                ${isChefOrBoard ? `
+                  <button 
+                    class="btn-secondary compact" 
+                    style="font-size:0.68rem; padding:2px 8px; margin-left:auto;" 
+                    onclick="window.tasksManager.handleToggleFlagReview('${task.commissionId}', '${task.actionId}', '${task.id}', ${!task.flagReview})"
+                    title="Geler temporairement l'application des sanctions automatiques pour cette tâche"
+                  >
+                    ${task.flagReview ? '🔓 Dégeler Sanction' : '🛡️ Geler Sanction'}
+                  </button>
+                ` : ''}
               </div>
             </div>
           </div>
@@ -213,6 +229,15 @@ class TasksManager {
     });
 
     this.container.innerHTML = html;
+  }
+
+  handleToggleFlagReview(commissionId, actionId, taskId, isFlagged) {
+    window.dbStore.setTaskFlagReview(commissionId, actionId, taskId, isFlagged);
+    if (isFlagged) {
+      window.app.showToast('Sanction automatique gelée pour révision par le Chef. 🛡️', 'warning');
+    } else {
+      window.app.showToast('Surveillance automatique réactivée sur la tâche.', 'success');
+    }
   }
 
   handleToggleTask(commissionId, actionId, taskId, isChecked) {
