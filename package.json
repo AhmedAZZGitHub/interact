@@ -1,0 +1,30 @@
+{
+  "name": "interact-club-platform",
+  "version": "1.0.0",
+  "description": "Plateforme collaborative multi-tenant et PWA pour les Clubs Interact (Rotary International)",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8080",
+    "start": "python -m http.server 8080",
+    "build": "echo 'PWA is production ready in root directory'"
+  },
+  "keywords": [
+    "interact",
+    "rotary",
+    "pwa",
+    "firebase",
+    "multi-tenant"
+  ],
+  "author": "Ahmed Azzouzi",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.344.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "typescript": "^5.4.2"
+  }
+}
